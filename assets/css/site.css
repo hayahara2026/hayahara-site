@@ -399,6 +399,18 @@ a.svc:hover h3{color:var(--blue)}
 .map-note{font-size:.9rem; color:var(--body); margin-top:10px}
 .map-note a{color:var(--blue); text-decoration:underline}
 .faq.faq-page{max-width:900px}
+/* v7: consent banner + footer «הגדרות עוגיות» + social row on light background */
+.cookie{z-index:95}
+.cookie p a{white-space:nowrap}
+.fab{transition:inset-block-end .2s}
+body.ck-open .fab{inset-block-end:calc(var(--ck-h, 0px) + 14px)}
+.legal .ck-set{background:none; border:0; padding:0; font:inherit; color:#8FA9C4; text-decoration:underline; cursor:pointer}
+.legal .ck-set:hover{color:#fff}
+.follow{margin-top:22px; padding-top:18px; border-top:1px solid var(--line)}
+.follow h2{font-size:1.06rem; color:var(--navy); margin:0}
+.follow .social{margin-top:12px; flex-wrap:wrap}
+.follow .social a{border-color:var(--line); color:var(--navy); background:#fff}
+.follow .social a:hover{background:var(--blue); border-color:var(--blue); color:#fff}
 /* footer: 4 columns */
 .ftr-grid{grid-template-columns:1.35fr 1fr 1fr 1.15fr; gap:32px}
 @media (max-width:940px){ .ftr-grid{grid-template-columns:1fr 1fr; gap:28px} }

@@ -104,26 +104,43 @@
     if (e.key === 'Escape' && panel.classList.contains('open')){ openPanel(false); a11yBtn.focus(); }
   });
 
-  /* ---- click-to-load map (nothing loads from Google before the click) ---- */
-  document.querySelectorAll('[data-map]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var box = btn.parentNode, f = document.createElement('iframe');
-      f.src = btn.getAttribute('data-map');
-      f.title = btn.getAttribute('data-title') || 'מפה';
-      f.loading = 'lazy';
-      f.referrerPolicy = 'no-referrer-when-downgrade';
-      f.setAttribute('allowfullscreen', '');
-      box.innerHTML = '';
-      box.appendChild(f);
-    });
+  /* ---- map: click-to-load; loads automatically once third-party services were accepted ---- */
+  function loadMap(btn, focus){
+    var box = btn.parentNode; if (!box) return;
+    var f = document.createElement('iframe');
+    f.src = btn.getAttribute('data-map');
+    f.title = btn.getAttribute('data-title') || 'מפה';
+    f.loading = 'lazy';
+    f.referrerPolicy = 'no-referrer-when-downgrade';
+    f.setAttribute('allowfullscreen', '');
+    box.innerHTML = '';
+    box.appendChild(f);
+    if (focus) f.focus();
+  }
+  function loadMaps(){ document.querySelectorAll('button[data-map]').forEach(function(b){ loadMap(b, false); }); }
+  document.querySelectorAll('button[data-map]').forEach(function(btn){
+    btn.addEventListener('click', function(){ loadMap(btn, true); });
   });
 
-  /* ---- cookie notice ---- */
+  /* ---- consent banner: third-party services (Google Maps). Choice in localStorage 'hy_consent' ---- */
+  var CK = 'hy_consent';
+  if (read(CK) === 'accepted') loadMaps();
   var ck = document.getElementById('cookie');
   if (ck){
-    if (!read('hy_cookie')) setTimeout(function(){ ck.classList.add('show'); }, 900);
-    var ckClose = function(v){ store('hy_cookie', v); ck.classList.remove('show'); };
-    document.getElementById('ckOk').addEventListener('click', function(){ ckClose('all'); });
-    document.getElementById('ckNo').addEventListener('click', function(){ ckClose('essential'); });
+    var ckOk = document.getElementById('ckOk'), ckNo = document.getElementById('ckNo'), ckBack = null;
+    var lift = function(){ root.style.setProperty('--ck-h', ck.classList.contains('show') ? ck.offsetHeight + 'px' : '0px'); };
+    var ckShow = function(on){
+      ck.classList.toggle('show', on); document.body.classList.toggle('ck-open', on); lift();
+      if (!on && ckBack){ ckBack.focus(); ckBack = null; }
+    };
+    var decide = function(v){ store(CK, v); ckShow(false); if (v === 'accepted') loadMaps(); };
+    ckOk.addEventListener('click', function(){ decide('accepted'); });
+    ckNo.addEventListener('click', function(){ decide('declined'); });
+    ck.addEventListener('keydown', function(e){ if (e.key === 'Escape') ckShow(false); });
+    window.addEventListener('resize', lift);
+    if (!read(CK)) setTimeout(function(){ ckShow(true); }, 900);
+    document.querySelectorAll('[data-cookie-settings]').forEach(function(b){
+      b.addEventListener('click', function(){ ckBack = b; ckShow(true); ckOk.focus(); });
+    });
   }
 })();
