@@ -26,7 +26,33 @@
 - אתר: https://hayahara.co.il/
 
 ## עמודים
-- https://hayahara.co.il/: דף הבית (שירותים, קהלי יעד, השכרה, אודות, שאלות נפוצות, צור קשר)
+- https://hayahara.co.il/: דף הבית
+- https://hayahara.co.il/services/: שירותי כביסה תעשייתית לעסקים ולמוסדות
+- https://hayahara.co.il/services/linen-towels.html: כביסת מצעים ומגבות לבתי מלון, מוסדות ועסקים
+- https://hayahara.co.il/services/uniforms.html: כביסת מדי עובדים, סרבלים וביגוד מטבח
+- https://hayahara.co.il/services/table-linen.html: כביסת מפות, מפיות וסינרים לאולמות ולקייטרינג
+- https://hayahara.co.il/services/dry-cleaning.html: ניקוי יבש לעסקים: וילונות, מדים ופריטים עדינים
+- https://hayahara.co.il/services/tablecloth-rental.html: השכרת מפות ומפיות לעסקים
+- https://hayahara.co.il/services/linen-rental.html: השכרת מצעים וטקסטיל לבתי מלון, מוסדות ועסקים
+- https://hayahara.co.il/services/hotels.html: מכבסה לבתי מלון
+- https://hayahara.co.il/services/institutions.html: כביסה למוסדות, פנימיות ובתי אבות
+- https://hayahara.co.il/services/catering-event-halls.html: כביסה לקייטרינג ולאולמות אירועים
+- https://hayahara.co.il/services/restaurants-businesses.html: כביסה למסעדות ולעסקים
+- https://hayahara.co.il/services/hotel-linen-laundry.html: כביסת מצעים ומגבות לבתי מלון
+- https://hayahara.co.il/services/hotel-linen-rental.html: השכרת מצעים וטקסטיל לבתי מלון
+- https://hayahara.co.il/services/institution-linen-laundry.html: כביסת מצעים למוסדות, פנימיות ובתי אבות
+- https://hayahara.co.il/services/institution-staff-uniforms.html: כביסת מדי צוות למוסדות ובתי אבות
+- https://hayahara.co.il/services/catering-table-linen-laundry.html: כביסת מפות ומפיות לקייטרינג
+- https://hayahara.co.il/services/event-hall-tablecloth-rental.html: השכרת מפות ומפיות לאולמות אירועים
+- https://hayahara.co.il/services/restaurant-uniforms-laundry.html: כביסת מדים, ביגוד מטבח וסינרים למסעדות
+- https://hayahara.co.il/services/restaurant-table-linen-laundry.html: כביסת מפות ומפיות למסעדות
+- https://hayahara.co.il/services/industrial-laundry-jerusalem.html: מכבסה תעשייתית בירושלים: איסוף ומסירה לעסקים ולמוסדות
+- https://hayahara.co.il/services/industrial-laundry-tel-aviv-center.html: מכבסה תעשייתית לעסקים בתל אביב ובאזור המרכז
+- https://hayahara.co.il/services/industrial-laundry-dead-sea.html: מכבסה תעשייתית באזור ים המלח: לבתי מלון ולעסקים
+- https://hayahara.co.il/services/industrial-laundry-gush-etzion.html: מכבסה תעשייתית בגוש עציון: לעסקים ולמוסדות
+- https://hayahara.co.il/about.html: אודות מכבסת היערה
+- https://hayahara.co.il/contact.html: צור קשר ומפה
+- https://hayahara.co.il/faq.html: שאלות נפוצות
 - https://hayahara.co.il/accessibility.html: הצהרת נגישות
 - https://hayahara.co.il/privacy.html: מדיניות פרטיות
 - https://hayahara.co.il/terms.html: תקנון ותנאי שימוש

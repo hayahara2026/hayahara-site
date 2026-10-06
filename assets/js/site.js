@@ -104,6 +104,20 @@
     if (e.key === 'Escape' && panel.classList.contains('open')){ openPanel(false); a11yBtn.focus(); }
   });
 
+  /* ---- click-to-load map (nothing loads from Google before the click) ---- */
+  document.querySelectorAll('[data-map]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var box = btn.parentNode, f = document.createElement('iframe');
+      f.src = btn.getAttribute('data-map');
+      f.title = btn.getAttribute('data-title') || 'מפה';
+      f.loading = 'lazy';
+      f.referrerPolicy = 'no-referrer-when-downgrade';
+      f.setAttribute('allowfullscreen', '');
+      box.innerHTML = '';
+      box.appendChild(f);
+    });
+  });
+
   /* ---- cookie notice ---- */
   var ck = document.getElementById('cookie');
   if (ck){

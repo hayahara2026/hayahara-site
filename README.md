@@ -10,6 +10,8 @@
 
 ## מבנה
 - `index.html`: דף הבית
+- `about.html`, `contact.html` (מפה בטעינה בלחיצה), `faq.html`
+- `services/`: עמוד שירותים, 6 עמודי שירות ו־4 עמודי קהל (slugs קבועים, לא לשנות)
 - `privacy.html`, `accessibility.html`, `terms.html`: עמודים משפטיים
 - `404.html`: עמוד שגיאה עצמאי (CSS מוטמע, קישורים מלאים ל־https://hayahara.co.il/)
 - `assets/css/site.css`, `assets/js/site.js`: עיצוב וסקריפט משותפים
@@ -17,7 +19,7 @@
 - `favicon.ico`, `site.webmanifest`, `robots.txt`, `sitemap.xml`, `llms.txt`
 
 ## כללים
-- נתיבים יחסיים בלבד (`assets/...`, `./`). בלי `/assets` ובלי `href="/"`, כי ב־github.io האתר יושב בתת־תיקייה.
+- נתיבים יחסיים בלבד (`assets/...`, `./`; בתוך `services/`: `../assets/...`, `../`). בלי `/assets` ובלי `href="/"`, כי ב־github.io האתר יושב בתת־תיקייה.
 - canonical, ‏og:url, ‏sitemap ו־llms.txt תמיד עם `https://hayahara.co.il/`.
 - כל עמוד חדש: להוסיף ל־`sitemap.xml` ול־`llms.txt`.
 - קבצים פנימיים (`AUDIT_HE.md`, `GIL_DOMAIN_HE.md`) לא נכנסים לריפו (ראו `.gitignore`).

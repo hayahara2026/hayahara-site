@@ -87,28 +87,42 @@
 <div class="topline" aria-hidden="true"></div>
 <header class="hdr" id="hdr">
   <div class="wrap hdr-in">
-    <a class="brand" href="./" aria-label="מכבסת היערה — לראש העמוד">
+    <a class="brand" href="./" aria-label="מכבסת היערה — לדף הבית">
       <span class="mark" aria-hidden="true"></span>
       <span class="wm" role="img" aria-label="מכבסת היערה"></span>
     </a>
 
     <ul class="mainnav">
-      <li><a href="index.html#services">שירותי כביסה</a></li>
+      <li class="has-sub">
+        <button type="button" aria-expanded="false">
+          שירותים
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="submenu">
+          <a href="services/">כל השירותים</a>
+          <a href="services/linen-towels.html">מצעים ומגבות</a>
+          <a href="services/uniforms.html">מדי עובדים</a>
+          <a href="services/table-linen.html">מפות, מפיות וסינרים</a>
+          <a href="services/dry-cleaning.html">ניקוי יבש</a>
+          <a href="services/tablecloth-rental.html">השכרת מפות ומפיות</a>
+          <a href="services/linen-rental.html">השכרת מצעים וטקסטיל</a>
+        </div>
+      </li>
       <li class="has-sub">
         <button type="button" aria-expanded="false">
           למי אנחנו מכבסים
           <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="submenu">
-          <a href="index.html#segments">בתי מלון</a>
-          <a href="index.html#segments">מוסדות ופנימיות</a>
-          <a href="index.html#segments">קייטרינג ואולמות</a>
-          <a href="index.html#segments">עסקים ומסעדות</a>
+          <a href="services/hotels.html">בתי מלון</a>
+          <a href="services/institutions.html">מוסדות ופנימיות</a>
+          <a href="services/catering-event-halls.html">קייטרינג ואולמות</a>
+          <a href="services/restaurants-businesses.html">מסעדות ועסקים</a>
         </div>
       </li>
-      <li><a href="index.html#rental">השכרת טקסטיל</a></li>
-      <li><a href="index.html#about">אודות</a></li>
-      <li><a href="index.html#contact">צור קשר</a></li>
+      <li><a href="about.html">אודות</a></li>
+      <li><a href="faq.html">שאלות נפוצות</a></li>
+      <li><a href="contact.html">צור קשר</a></li>
     </ul>
 
     <span class="hdr-div" aria-hidden="true"></span>
@@ -118,23 +132,29 @@
       <span><small>דברו איתנו</small><b>053-2535393</b></span>
     </a>
 
-    <a class="btn btn-p btn-sm cta" href="index.html#contact">הצעת מחיר</a>
+    <a class="btn btn-p btn-sm cta" href="contact.html">הצעת מחיר</a>
 
     <button class="burger" type="button" id="burger" aria-expanded="false" aria-controls="mobnav" aria-label="תפריט">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
   </div>
 
-  <nav class="mobnav" id="mobnav">
-    <a href="index.html#services">שירותי כביסה</a>
-    <a href="index.html#segments" class="sub">בתי מלון</a>
-    <a href="index.html#segments" class="sub">מוסדות ופנימיות</a>
-    <a href="index.html#segments" class="sub">קייטרינג ואולמות</a>
-    <a href="index.html#segments" class="sub">עסקים ומסעדות</a>
-    <a href="index.html#rental">השכרת טקסטיל</a>
-    <a href="index.html#about">אודות</a>
-    <a href="index.html#faq">שאלות נפוצות</a>
-    <a href="index.html#contact">צור קשר</a>
+  <nav class="mobnav" id="mobnav" aria-label="תפריט ראשי">
+    <a href="services/">שירותים</a>
+    <a href="services/linen-towels.html" class="sub">מצעים ומגבות</a>
+    <a href="services/uniforms.html" class="sub">מדי עובדים</a>
+    <a href="services/table-linen.html" class="sub">מפות, מפיות וסינרים</a>
+    <a href="services/dry-cleaning.html" class="sub">ניקוי יבש</a>
+    <a href="services/tablecloth-rental.html" class="sub">השכרת מפות ומפיות</a>
+    <a href="services/linen-rental.html" class="sub">השכרת מצעים וטקסטיל</a>
+    <a href="services/#audiences">למי אנחנו מכבסים</a>
+    <a href="services/hotels.html" class="sub">בתי מלון</a>
+    <a href="services/institutions.html" class="sub">מוסדות ופנימיות</a>
+    <a href="services/catering-event-halls.html" class="sub">קייטרינג ואולמות</a>
+    <a href="services/restaurants-businesses.html" class="sub">מסעדות ועסקים</a>
+    <a href="about.html">אודות</a>
+    <a href="faq.html">שאלות נפוצות</a>
+    <a href="contact.html">צור קשר</a>
     <a class="btn btn-p" href="tel:0532535393" style="margin:16px 20px 0; width:calc(100% - 40px); border-bottom:0">התקשרו: 053-2535393</a>
   </nav>
 </header>
@@ -186,7 +206,6 @@
 </section>
 </main>
 
-<!-- ===== FOOTER ===== -->
 <footer class="ftr">
   <div class="wrap">
     <div class="ftr-grid">
@@ -209,23 +228,39 @@
         </div>
       </div>
       <div>
-        <h4>ניווט מהיר</h4>
+        <h4>שירותים</h4>
         <ul>
-          <li><a href="index.html#services">שירותי כביסה</a></li>
-          <li><a href="index.html#segments">למי אנחנו מכבסים</a></li>
-          <li><a href="index.html#rental">השכרת טקסטיל</a></li>
-          <li><a href="index.html#about">אודות</a></li>
-          <li><a href="index.html#faq">שאלות נפוצות</a></li>
-          <li><a href="index.html#contact">צור קשר</a></li>
+          <li><a href="services/">כל השירותים</a></li>
+          <li><a href="services/linen-towels.html">מצעים ומגבות</a></li>
+          <li><a href="services/uniforms.html">מדי עובדים</a></li>
+          <li><a href="services/table-linen.html">מפות, מפיות וסינרים</a></li>
+          <li><a href="services/dry-cleaning.html">ניקוי יבש</a></li>
+          <li><a href="services/tablecloth-rental.html">השכרת מפות ומפיות</a></li>
+          <li><a href="services/linen-rental.html">השכרת מצעים וטקסטיל</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>למי אנחנו מכבסים</h4>
+        <ul>
+          <li><a href="services/hotels.html">בתי מלון</a></li>
+          <li><a href="services/institutions.html">מוסדות ופנימיות</a></li>
+          <li><a href="services/catering-event-halls.html">קייטרינג ואולמות</a></li>
+          <li><a href="services/restaurants-businesses.html">מסעדות ועסקים</a></li>
+        </ul>
+        <h4>מידע</h4>
+        <ul>
+          <li><a href="about.html">אודות</a></li>
+          <li><a href="faq.html">שאלות נפוצות</a></li>
+          <li><a href="contact.html">צור קשר</a></li>
         </ul>
       </div>
       <div>
         <h4>פרטי התקשרות</h4>
         <ul>
-          <li>טלפון: <a href="tel:0532535393" style="direction:ltr; unicode-bidi:plaintext; display:inline-block">053-2535393</a></li>
-          <li>אימייל: <a href="mailto:m.hayahara2026@gmail.com" style="direction:ltr; unicode-bidi:plaintext; display:inline-block">m.hayahara2026@gmail.com</a></li>
+          <li>טלפון: <a href="tel:0532535393" class="ltr">053-2535393</a></li>
+          <li>אימייל: <a href="mailto:m.hayahara2026@gmail.com" class="ltr">m.hayahara2026@gmail.com</a></li>
           <li>כתובת: פרי גן 16, מישור אדומים</li>
-          <li style="margin-top:8px; color:#9FB8D2">אזורי שירות: ירושלים, תל אביב והמרכז, ים המלח וגוש עציון</li>
+          <li style="margin-top:8px; color:#9FB8D2">אזורי שירות: <a href="services/industrial-laundry-jerusalem.html">ירושלים</a> · <a href="services/industrial-laundry-tel-aviv-center.html">תל אביב והמרכז</a> · <a href="services/industrial-laundry-dead-sea.html">ים המלח</a> · <a href="services/industrial-laundry-gush-etzion.html">גוש עציון</a></li>
         </ul>
       </div>
     </div>
@@ -270,6 +305,7 @@
     <a href="accessibility.html">הצהרת נגישות</a>
   </div>
 </div>
+
 
 <!-- ===== COOKIE ===== -->
 <div class="cookie" id="cookie" role="region" aria-label="הודעת עוגיות">
