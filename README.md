@@ -4,8 +4,9 @@
 
 ## אירוח
 - האתר מתפרסם ב־GitHub Pages מהענף `main`, תיקיית השורש (`/`).
-- כתובת זמנית: https://hayahara2026.github.io/hayahara-site/
-- הדומיין `hayahara.co.il` יחובר רק אחרי שרשומות ה־DNS יעבדו. **לא להוסיף קובץ `CNAME` ולא להגדיר Custom domain לפני כן.**
+- דומיין: https://hayahara.co.il (קובץ `CNAME` בשורש, Custom domain ב־Settings → Pages, ‏Enforce HTTPS). ‏www מפנה לדומיין הראשי.
+- DNS ב־Cloudflare: ארבע רשומות A לכתובות של GitHub Pages ו־CNAME ל־`www` אל `hayahara2026.github.io`, במצב DNS only (ענן אפור).
+- הכתובת הישנה https://hayahara2026.github.io/hayahara-site/ מפנה אוטומטית לדומיין. לא למחוק את קובץ `CNAME`.
 - ‏`.nojekyll` נשאר בשורש, כדי ש־GitHub יגיש את הקבצים כמו שהם.
 
 ## מבנה
