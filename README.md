@@ -2,10 +2,22 @@
 
 אתר סטטי (HTML) של מכבסת היערה, מכבסה תעשייתית לעסקים ולמוסדות מאז 1980, פרי גן 16, מישור אדומים.
 
-## מבנה
-- `index.html`: האתר (עמוד אחד)
-- `assets/`: לוגו ותמונות
-- `favicon.png`, `robots.txt`, `sitemap.xml`, `llms.txt`
+## אירוח
+- האתר מתפרסם ב־GitHub Pages מהענף `main`, תיקיית השורש (`/`).
+- כתובת זמנית: https://hayahara2026.github.io/hayahara-site/
+- הדומיין `hayahara.co.il` יחובר רק אחרי שרשומות ה־DNS יעבדו. **לא להוסיף קובץ `CNAME` ולא להגדיר Custom domain לפני כן.**
+- ‏`.nojekyll` נשאר בשורש, כדי ש־GitHub יגיש את הקבצים כמו שהם.
 
-## העלאה
-מעתיקים את כל הקבצים (בלי README.md ו־GIL_DOMAIN_HE.md) לתיקיית השורש של הדומיין hayahara.co.il.
+## מבנה
+- `index.html`: דף הבית
+- `privacy.html`, `accessibility.html`, `terms.html`: עמודים משפטיים
+- `404.html`: עמוד שגיאה עצמאי (CSS מוטמע, קישורים מלאים ל־https://hayahara.co.il/)
+- `assets/css/site.css`, `assets/js/site.js`: עיצוב וסקריפט משותפים
+- `assets/`: לוגו, תמונות, `og-image.jpg` ו־`icons/`
+- `favicon.ico`, `site.webmanifest`, `robots.txt`, `sitemap.xml`, `llms.txt`
+
+## כללים
+- נתיבים יחסיים בלבד (`assets/...`, `./`). בלי `/assets` ובלי `href="/"`, כי ב־github.io האתר יושב בתת־תיקייה.
+- canonical, ‏og:url, ‏sitemap ו־llms.txt תמיד עם `https://hayahara.co.il/`.
+- כל עמוד חדש: להוסיף ל־`sitemap.xml` ול־`llms.txt`.
+- קבצים פנימיים (`AUDIT_HE.md`, `GIL_DOMAIN_HE.md`) לא נכנסים לריפו (ראו `.gitignore`).

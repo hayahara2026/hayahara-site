@@ -1,0 +1,24 @@
+{
+  "name": "מכבסת היערה",
+  "short_name": "מכבסת היערה",
+  "description": "מכבסה תעשייתית לעסקים ולמוסדות מאז 1980",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#ffffff",
+  "theme_color": "#0E3462",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
