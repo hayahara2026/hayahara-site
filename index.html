@@ -49,10 +49,14 @@
     "height": 512
    },
    "image": "https://hayahara.co.il/assets/og-image.jpg",
-   "description": "מכבסה תעשייתית לעסקים ולמוסדות, פועלת מאז 1980: כביסת מצעים ומגבות, מדי עובדים, מפות ומפיות, ניקוי יבש, השכרת מפות ומפיות והשכרת מצעים וטקסטיל. איסוף ומסירה לעסקים.",
+   "description": "מכבסה תעשייתית לעסקים ולמוסדות, פועלת מאז 1980: כביסת מצעים ומגבות, מדי עובדים, מפות ומפיות, ניקוי יבש, השכרת מפות ומפיות והשכרת מצעים ומגבות, וגם מכירת מפות, מגבות וכלי מיטה. איסוף ומסירה לעסקים.",
    "telephone": "+972-53-2535393",
    "email": "m.hayahara2026@gmail.com",
    "foundingDate": "1980",
+   "openingHoursSpecification": [
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"], "opens": "09:00", "closes": "16:00"},
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": "Friday", "opens": "09:00", "closes": "14:00"}
+   ],
    "address": {
     "@type": "PostalAddress",
     "streetAddress": "פרי גן 16",
@@ -69,6 +73,7 @@
     "ירושלים",
     "תל אביב",
     "המרכז",
+    "השרון",
     "ים המלח",
     "גוש עציון"
    ],
@@ -83,7 +88,8 @@
     "כביסת מפות ומפיות",
     "ניקוי יבש",
     "השכרת מפות ומפיות",
-    "השכרת מצעים וטקסטיל"
+    "השכרת מצעים ומגבות",
+    "מכירת מפות, מגבות וכלי מיטה לעסקים"
    ],
    "sameAs": [
     "https://www.facebook.com/profile.php?id=61594868753077",
@@ -140,7 +146,15 @@
       "@type": "Offer",
       "itemOffered": {
        "@type": "Service",
-       "name": "השכרת מצעים וטקסטיל"
+       "name": "השכרת מצעים ומגבות (מגבות, סדינים, ציפות)"
+      }
+     },
+     {
+      "@type": "Offer",
+      "businessFunction": "http://purl.org/goodrelations/v1#Sell",
+      "itemOffered": {
+       "@type": "Service",
+       "name": "מכירת מפות, מגבות וכלי מיטה לעסקים ולמוסדות"
       }
      }
     ]
@@ -195,7 +209,7 @@
      "name": "לאילו אזורים אתם מגיעים לאיסוף ומסירה?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "אנחנו אוספים ומחזירים בירושלים, בתל אביב ובאזור המרכז, באזור ים המלח ובגוש עציון. המכבסה עצמה נמצאת בפרי גן 16 במישור אדומים. אם אתם קצת מחוץ לאזורים האלה — התקשרו ונבדוק, ברוב המקרים נמצא פתרון."
+      "text": "אנחנו אוספים ומחזירים בירושלים, בתל אביב ובאזור המרכז, בשרון, באזור ים המלח ובגוש עציון. המכבסה עצמה נמצאת בפרי גן 16 במישור אדומים. אם אתם קצת מחוץ לאזורים האלה — התקשרו ונבדוק, ברוב המקרים נמצא פתרון."
      }
     }
    ]
@@ -229,7 +243,7 @@
           <a href="services/table-linen.html">מפות, מפיות וסינרים</a>
           <a href="services/dry-cleaning.html">ניקוי יבש</a>
           <a href="services/tablecloth-rental.html">השכרת מפות ומפיות</a>
-          <a href="services/linen-rental.html">השכרת מצעים וטקסטיל</a>
+          <a href="services/linen-rental.html">השכרת מצעים ומגבות</a>
         </div>
       </li>
       <li class="has-sub">
@@ -270,7 +284,7 @@
     <a href="services/table-linen.html" class="sub">מפות, מפיות וסינרים</a>
     <a href="services/dry-cleaning.html" class="sub">ניקוי יבש</a>
     <a href="services/tablecloth-rental.html" class="sub">השכרת מפות ומפיות</a>
-    <a href="services/linen-rental.html" class="sub">השכרת מצעים וטקסטיל</a>
+    <a href="services/linen-rental.html" class="sub">השכרת מצעים ומגבות</a>
     <a href="services/#audiences">למי אנחנו מכבסים</a>
     <a href="services/hotels.html" class="sub">בתי מלון</a>
     <a href="services/institutions.html" class="sub">מוסדות ופנימיות</a>
@@ -448,8 +462,9 @@
     <div class="rent">
       <div class="rent-a">
         <span class="tagline">שירות נוסף</span>
-        <h3>השכרת טקסטיל לעסקים</h3>
-        <p>לא רוצים להחזיק מלאי משלכם? אפשר לשכור מאיתנו מפות ומפיות לאירועים, כולל ראנרים וכיסויי כיסאות, או מצעים וטקסטיל לעסק ולמוסד. מקבלים סט נקי ומגוהץ לכל אירוע או מחזור עבודה ומחזירים אותו משומש — בלי לרכוש, בלי לאחסן, ובלי להתמודד עם בלאי ופריטים שנפסלו.</p>
+        <h3>השכרת מפות, מצעים ומגבות לעסקים</h3>
+        <p>לא רוצים להחזיק מלאי משלכם? אפשר לשכור מאיתנו מפות ומפיות לאירועים, כולל ראנרים וכיסויי כיסאות, או מצעים ומגבות לעסק ולמוסד. מקבלים סט נקי ומגוהץ לכל אירוע או מחזור עבודה ומחזירים אותו משומש — בלי לרכוש, בלי לאחסן, ובלי להתמודד עם בלאי ופריטים שנפסלו.</p>
+        <p>רוצים פריטים משלכם? אפשר גם לקנות מאיתנו מפות, מגבות וכלי מיטה לעסקים ולמוסדות, ולהמשיך לכבס אותם אצלנו.</p>
         <p style="margin-top:16px"><a class="btn btn-p" href="#contact">לפרטים ולתמחור</a></p>
       </div>
       <div class="rent-b weave">
@@ -463,10 +478,11 @@
           <a class="more" href="services/tablecloth-rental.html">לעמוד השכרת המפות ←</a>
         </div>
         <div class="dept">
-          <h4>השכרת מצעים וטקסטיל</h4>
+          <h4>השכרת מצעים ומגבות</h4>
           <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>מצעים</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>טקסטיל לעסקים ולמוסדות</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>מגבות</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>סדינים</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg>ציפות</li>
           </ul>
           <a class="more" href="services/linen-rental.html">לעמוד השכרת המצעים ←</a>
         </div>
@@ -495,7 +511,8 @@
           <div><dt>תחום</dt><dd>מכבסה תעשייתית לעסקים ומוסדות</dd></div>
           <div><dt>פועלת</dt><dd>מאז 1980</dd></div>
           <div><dt>כתובת</dt><dd>פרי גן 16, מישור אדומים</dd></div>
-          <div><dt>אזורי איסוף ומסירה</dt><dd>ירושלים, תל אביב והמרכז, ים המלח וגוש עציון</dd></div>
+          <div><dt>אזורי איסוף ומסירה</dt><dd>ירושלים, תל אביב והמרכז, השרון, ים המלח וגוש עציון</dd></div>
+          <div><dt>שעות פעילות</dt><dd>א׳–ה׳ 09:00–16:00 · ו׳ 09:00–14:00 · שבת סגור</dd></div>
           <div><dt>טלפון</dt><dd><a href="tel:0532535393" class="ltr">053-2535393</a></dd></div>
           <div><dt>אימייל</dt><dd><a href="mailto:m.hayahara2026@gmail.com" class="ltr">m.hayahara2026@gmail.com</a></dd></div>
         </dl>
@@ -524,7 +541,7 @@
       </details>
       <details>
         <summary>לאילו אזורים אתם מגיעים לאיסוף ומסירה?</summary>
-        <div class="ans">אנחנו אוספים ומחזירים בירושלים, בתל אביב ובאזור המרכז, באזור ים המלח ובגוש עציון. המכבסה עצמה נמצאת בפרי גן 16 במישור אדומים. אם אתם קצת מחוץ לאזורים האלה — התקשרו ונבדוק, ברוב המקרים נמצא פתרון.</div>
+        <div class="ans">אנחנו אוספים ומחזירים בירושלים, בתל אביב ובאזור המרכז, בשרון, באזור ים המלח ובגוש עציון. המכבסה עצמה נמצאת בפרי גן 16 במישור אדומים. אם אתם קצת מחוץ לאזורים האלה — התקשרו ונבדוק, ברוב המקרים נמצא פתרון.</div>
       </details>
     </div>
     <p class="sec-more"><a class="more" href="faq.html">לכל השאלות הנפוצות ←</a></p>
@@ -560,7 +577,11 @@
         </li>
         <li>
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg></span>
-          <div><dt>אזורי איסוף ומסירה</dt><dd style="font-size:1rem">ירושלים · תל אביב והמרכז · ים המלח · גוש עציון</dd></div>
+          <div><dt>אזורי איסוף ומסירה</dt><dd style="font-size:1rem">ירושלים · תל אביב והמרכז · השרון · ים המלח · גוש עציון</dd></div>
+        </li>
+        <li>
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div><dt>שעות פעילות</dt><dd style="font-size:1rem">א׳–ה׳ 09:00–16:00 · ו׳ 09:00–14:00 · שבת סגור</dd></div>
         </li>
       </ul>
 
@@ -638,7 +659,7 @@
           <li><a href="services/table-linen.html">מפות, מפיות וסינרים</a></li>
           <li><a href="services/dry-cleaning.html">ניקוי יבש</a></li>
           <li><a href="services/tablecloth-rental.html">השכרת מפות ומפיות</a></li>
-          <li><a href="services/linen-rental.html">השכרת מצעים וטקסטיל</a></li>
+          <li><a href="services/linen-rental.html">השכרת מצעים ומגבות</a></li>
         </ul>
       </div>
       <div>
@@ -662,7 +683,8 @@
           <li>טלפון: <a href="tel:0532535393" class="ltr">053-2535393</a></li>
           <li>אימייל: <a href="mailto:m.hayahara2026@gmail.com" class="ltr">m.hayahara2026@gmail.com</a></li>
           <li>כתובת: פרי גן 16, מישור אדומים</li>
-          <li style="margin-top:8px; color:#9FB8D2">אזורי שירות: <a href="services/industrial-laundry-jerusalem.html">ירושלים</a> · <a href="services/industrial-laundry-tel-aviv-center.html">תל אביב והמרכז</a> · <a href="services/industrial-laundry-dead-sea.html">ים המלח</a> · <a href="services/industrial-laundry-gush-etzion.html">גוש עציון</a></li>
+          <li>שעות: א׳–ה׳ 09:00–16:00 · ו׳ 09:00–14:00 · שבת סגור</li>
+          <li style="margin-top:8px; color:#9FB8D2">אזורי שירות: <a href="services/industrial-laundry-jerusalem.html">ירושלים</a> · <a href="services/industrial-laundry-tel-aviv-center.html">תל אביב והמרכז</a> · השרון · <a href="services/industrial-laundry-dead-sea.html">ים המלח</a> · <a href="services/industrial-laundry-gush-etzion.html">גוש עציון</a></li>
         </ul>
       </div>
     </div>

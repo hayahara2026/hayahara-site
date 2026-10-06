@@ -20,7 +20,7 @@
 - `favicon.ico`, `site.webmanifest`, `robots.txt`, `sitemap.xml`, `llms.txt`
 
 ## כללים
-- נתיבים יחסיים בלבד (`assets/...`, `./`; בתוך `services/`: `../assets/...`, `../`). בלי `/assets` ובלי `href="/"`, כי ב־github.io האתר יושב בתת־תיקייה.
+- רק נתיבים יחסיים (`assets/...`, `./`; בתוך `services/`: `../assets/...`, `../`). בלי `/assets` ובלי `href="/"`, כי ב־github.io האתר יושב בתת־תיקייה.
 - canonical, ‏og:url, ‏sitemap ו־llms.txt תמיד עם `https://hayahara.co.il/`.
 - כל עמוד חדש: להוסיף ל־`sitemap.xml` ול־`llms.txt`.
 - קבצים פנימיים (`AUDIT_HE.md`, `GIL_DOMAIN_HE.md`) לא נכנסים לריפו (ראו `.gitignore`).
