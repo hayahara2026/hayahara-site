@@ -213,6 +213,7 @@ button{font:inherit; cursor:pointer}
 .rent-b svg{width:17px; height:17px; color:#8FC4EE; flex:0 0 auto}
 .tagline{display:inline-block; background:var(--sky); color:var(--navy); font-family:"Rubik",sans-serif; font-weight:600; font-size:.78rem; letter-spacing:.08em; padding:5px 12px; border-radius:4px; margin-bottom:14px}
 .rent-a h3{font-size:1.42rem; font-weight:700}
+.rent-a h2{font-size:clamp(1.42rem,2.4vw,1.75rem); font-weight:700}
 .rent-a p{margin-top:12px; color:var(--body)}
 @media (max-width:860px){ .rent{grid-template-columns:1fr} }
 
