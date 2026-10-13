@@ -63,6 +63,12 @@
 - https://hayahara.co.il/services/industrial-laundry-tel-aviv-center.html: מכבסה תעשייתית לעסקים בתל אביב ובאזור המרכז
 - https://hayahara.co.il/services/industrial-laundry-dead-sea.html: מכבסה תעשייתית באזור ים המלח: לבתי מלון ולעסקים
 - https://hayahara.co.il/services/industrial-laundry-gush-etzion.html: מכבסה תעשייתית בגוש עציון: לעסקים ולמוסדות
+- https://hayahara.co.il/services/industrial-laundry-sharon.html: מכבסה תעשייתית בשרון (למשל נתניה, רעננה, כפר סבא)
+- https://hayahara.co.il/services/institutional-laundry-jerusalem.html: מכבסה למוסדות בירושלים: ישיבות, פנימיות ובתי אבות
+- https://hayahara.co.il/services/institutional-laundry-tel-aviv.html: מכבסה למוסדות בתל אביב ובמרכז
+- https://hayahara.co.il/services/tablecloth-rental-jerusalem.html: השכרת מפות ומפיות בירושלים
+- https://hayahara.co.il/services/tablecloth-rental-gush-etzion.html: השכרת מפות ומפיות בגוש עציון
+- https://hayahara.co.il/services/tablecloth-rental-sharon.html: השכרת מפות ומפיות בשרון
 - https://hayahara.co.il/about.html: אודות מכבסת היערה
 - https://hayahara.co.il/contact.html: צור קשר ומפה
 - https://hayahara.co.il/faq.html: שאלות נפוצות
