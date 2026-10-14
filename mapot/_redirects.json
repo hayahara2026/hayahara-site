@@ -1,8 +1,8 @@
 {
  "/services/tablecloth-rental.html": "/mapot/",
- "/services/event-hall-tablecloth-rental.html": "/mapot/events/halls/",
- "/services/tablecloth-rental-jerusalem.html": "/mapot/areas/jerusalem/",
- "/services/tablecloth-rental-gush-etzion.html": "/mapot/areas/gush-etzion/",
- "/services/tablecloth-rental-sharon.html": "/mapot/areas/",
- "/services/table-linen.html": "/mapot/catalog/tablecloths/"
+ "/services/event-hall-tablecloth-rental.html": "/mapot/halls-catering/",
+ "/services/tablecloth-rental-jerusalem.html": "/mapot/service-areas/",
+ "/services/tablecloth-rental-gush-etzion.html": "/mapot/service-areas/",
+ "/services/tablecloth-rental-sharon.html": "/mapot/service-areas/",
+ "/services/table-linen.html": "/mapot/tablecloths/"
 }

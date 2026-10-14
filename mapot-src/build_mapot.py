@@ -1,75 +1,117 @@
-# Generates /mapot/ sub-site. Brand name: change ONLY mapot-src/config.json -> "brand".
-import json,os,html
+# Builds /mapot/ from the copywriter file. Brand: ONLY mapot-src/config.json "brand" ({BRAND} in copy).
+import json,os,re,html,shutil
 R=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.dirname(R)
 C=json.load(open(os.path.join(R,'config.json')));B=C['brand'];BASE=C['base'];WA=C['wa'];PH=C['phone']
-OUT=os.path.join(ROOT,'mapot')
-CATS=[('tablecloths','מפות','מפות לאירועים לפי מידה. כל סט מגיע נקי ומגוהץ.'),
-('napkins','מפיות','מפיות בד לאירועים.'),('runners','ראנרים','ראנרים לשולחנות אירוע.'),
-('chair-covers','כיסויי כיסאות','כיסויי כיסאות לאירועים.'),('bedding','מצעים','מצעים להשכרה.'),('towels','מגבות','מגבות להשכרה.')]
-ITEMS={'tablecloths':[('3x3','מפה 3×3','מפה במידה 3×3 מטר, נקייה ומגוהצת.',False),('size-todo-1','מפה – מידה נוספת (TODO)','TODO: מידה, תיאור וזמינות ימולאו לאחר אישור צבי.',True)],
-'napkins':[('napkin-todo','מפית בד (TODO)','TODO: מידות ופרטים לאישור.',True)],'runners':[('runner-todo','ראנר (TODO)','TODO: מידות ופרטים לאישור.',True)],
-'chair-covers':[('chair-cover-todo','כיסוי כיסא (TODO)','TODO: דגם ופרטים לאישור.',True)],'bedding':[('bedding-todo','סט מצעים (TODO)','TODO: מידות ופרטים לאישור.',True)],
-'towels':[('towel-todo','מגבת (TODO)','TODO: מידות ופרטים לאישור.',True)]}
-AREAS=[('jerusalem','ירושלים'),('gush-etzion','גוש עציון'),('kfar-saba','כפר סבא'),('raanana','רעננה'),('netanya','נתניה'),('beit-shemesh','בית שמש'),('beitar-illit','ביתר עילית'),('modiin-illit','מודיעין עילית'),('bnei-brak','בני ברק'),('elad','אלעד')]
-EVENTS=[('weddings','חתונות'),('bar-mitzvah','בר מצווה'),('halls','אולמות אירועים'),('catering','קייטרינג')]
-FAQ=[('אילו פריטים אפשר לשכור?','מפות, מפיות, ראנרים, כיסויי כיסאות, מצעים ומגבות לאירועים.'),
-('באיזה מצב מגיעות המפות?','כל סט מגיע נקי ומגוהץ.'),('איך מזמינים?',f'שולחים הודעת וואטסאפ ל־{PH} ומקבלים מענה עם פרטי ההזמנה.'),
-('מי עומד מאחורי {B}?'.replace('{B}',B),f'{B} הוא שירות השכרת המפות של מכבסת היערה, הפועלת מאז 1980.'),
-('לאילו אזורים יש משלוח?','TODO: רשימת אזורי המשלוח ממתינה לאישור.')]
+SRC=C.get('copy','/workspace/copywriter/mapot-site-texts-2026-10-15.md');shutil.copy(SRC,os.path.join(R,'copy.md'))
+md=open(os.path.join(R,'copy.md')).read().replace('{BRAND}',B)
+OUT=os.path.join(ROOT,'mapot');shutil.rmtree(OUT,ignore_errors=True)
+PEND='<span class="pend">[ממתין לצבי]</span>'
+def inl(s):
+  s=html.escape(s,quote=False);s=re.sub(r'\*\*(.+?)\*\*',r'<strong>\1</strong>',s)
+  s=s.replace('[ממתין לצבי]',PEND).replace('053-2535393',f'<a href="{WA}">053-2535393</a>').replace('office@hayahara.co.il','<a href="mailto:office@hayahara.co.il">office@hayahara.co.il</a>');return s
+def md2html(lines):
+  o=[];ul=False;tbl=[]
+  for l in lines:
+    l=l.rstrip()
+    if l.startswith('|'):
+      if not re.match(r'^\|[-|\s]+\|$',l):tbl.append([c.strip() for c in l.strip('|').split('|')])
+      continue
+    if tbl:o.append('<table>'+''.join('<tr>'+''.join(f'<{"th" if i==0 else "td"}>{inl(c)}</{"th" if i==0 else "td"}>' for c in r)+'</tr>' for i,r in enumerate(tbl))+'</table>');tbl=[]
+    if l.startswith('- '):
+      if not ul:o.append('<ul>');ul=True
+      o.append(f'<li>{inl(l[2:])}</li>');continue
+    if ul:o.append('</ul>');ul=False
+    if not l or l.startswith('(') or l=='---':continue
+    m=re.match(r'^(#{1,2}) (.*)',l)
+    if m:o.append(f'<h{len(m.group(1))}>{inl(m.group(2))}</h{len(m.group(1))}>');continue
+    o.append(f'<p>{inl(l)}</p>')
+  if ul:o.append('</ul>')
+  return '\n'.join(o)
+# split pages by headings that carry a /mapot/ URL
+P={}
+for m in re.finditer(r'^#{2,3} [\d.]+ ([^:\n]+): (/mapot/[^\s]*)\n(.*?)(?=^#{2,3} [\d.]+ |^## שאלות פתוחות|\Z)',md,re.S|re.M):
+  name,url,body=m.group(1).strip(),m.group(2),m.group(3)
+  t=re.search(r'\*\*title:\*\* (.*)',body).group(1);d=re.search(r'\*\*meta description:\*\* (.*)',body).group(1)
+  lines=[x for x in body.split('\n') if not x.startswith('**title') and not x.startswith('**meta')]
+  P[url]=dict(name=name,title=t,desc=d,lines=lines)
+FOOT=[l[2:] for l in md.split('\n') if l.startswith('> ')]
+cart=P.pop('/mapot/order/');cl={k:v for k,v in re.findall(r'\*\*([^*]+):\*\* (.*)','\n'.join(cart['lines']))}
+# product template (section 6)
+T={}
+for m in re.finditer(r'^### 6\.\d (.+?)\n(.*?)(?=^### |^---)',md,re.S|re.M):
+  b=m.group(2);T[m.group(1).strip()]=dict(name=re.search(r'\*\*שם מוצר:\*\* (.*)',b).group(1),desc=re.search(r'\*\*תיאור:\*\* (.*)',b).group(1),pts=re.findall(r'^- (.*)',b,re.M),btn=re.search(r'\*\*כפתור:\*\* (.*)',b).group(1),qty=re.search(r'\*\*הערה לשדה הכמות:\*\* (.*)',b).group(1))
+CATS=[('tablecloths','מפות','מפה'),('napkins','מפיות','מפית'),('runners','ראנרים','ראנר'),('chair-covers','כיסויי כיסאות','כיסוי כיסא')]
+W='[ממתין לצבי]'
+# products: only 3x3 confirmed; one marked example per category
+PRODUCTS=[dict(slug='tablecloth-3x3',cat='tablecloths',size='3×3',color=W,example=False)]+[dict(slug=f'{c}-example',cat=c,size=W,color=None if c=='chair-covers' else W,example=True) for c,_,_ in CATS]
+def fill(s,p):return s.replace('{SIZE}',p['size']).replace(' | {COLOR}','' if p['color'] is None else ' | '+p['color']).replace('{COLOR}',p['color'] or '')
+for p in PRODUCTS:
+  t=T[[x for c,_,x in CATS if c==p['cat']][0]];p['name']=fill(t['name'],p);p['desc']=fill(t['desc'],p);p['t']=t;p['catname']=[n for c,n,_ in CATS if c==p['cat']][0]
 pages=[]
-ORG={"@type":"LocalBusiness","@id":BASE+"#business","name":B,"url":BASE,"telephone":"+972-53-2535393","parentOrganization":{"@id":"https://hayahara.co.il/#business"},"address":{"@type":"PostalAddress","streetAddress":"פרי גן 16","addressLocality":"מישור אדומים","addressCountry":"IL"}}
-CSS="""*{box-sizing:border-box}body{margin:0;font-family:'Assistant','Rubik',system-ui,sans-serif;background:#fbf7f0;color:#2b2233;line-height:1.7}
-a{color:#7a2e5a}header{background:#2b2233;color:#fbf7f0;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.logo{font-family:Georgia,'Frank Ruhl Libre',serif;font-size:1.5rem;letter-spacing:.04em;color:#e8c27a;text-decoration:none;border:2px solid #e8c27a;padding:2px 12px;border-radius:30px}
-nav a{color:#fbf7f0;margin-inline-start:12px;text-decoration:none;font-size:.95rem}main{max-width:960px;margin:auto;padding:16px}
-.hero{background:linear-gradient(135deg,#7a2e5a,#2b2233);color:#fff;border-radius:18px;padding:32px 20px;margin:12px 0}
-.hero h1{font-family:Georgia,serif;margin:0 0 8px}.btn{display:inline-block;background:#25d366;color:#08311a;font-weight:700;padding:12px 22px;border-radius:30px;text-decoration:none}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}.card{background:#fff;border:1px solid #eadfcc;border-radius:14px;padding:14px;text-decoration:none;color:inherit}
-.ph{background:repeating-linear-gradient(45deg,#f1e8d8,#f1e8d8 10px,#fbf7f0 10px,#fbf7f0 20px);border:2px dashed #c9b48a;border-radius:12px;min-height:150px;display:flex;align-items:center;justify-content:center;color:#8a7650;font-size:.9rem;margin:10px 0}
-.todo{background:#fff3cd;border:1px dashed #d4a017;padding:6px 10px;border-radius:8px}.crumb{font-size:.85rem}footer{background:#2b2233;color:#cfc3d6;padding:20px 16px;margin-top:30px;font-size:.9rem}footer a{color:#e8c27a}
-.fab{position:fixed;bottom:16px;left:16px;background:#25d366;color:#08311a;border-radius:30px;padding:12px 18px;font-weight:700;text-decoration:none;box-shadow:0 4px 12px #0003}"""
-def page(path,title,desc,crumbs,body,extra=None):
-  url=BASE+path;g=[ORG]
-  bl={"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":i+1,"name":n,"item":BASE+p} for i,(n,p) in enumerate([(B,'')]+crumbs)]};g.append(bl)
-  if extra:g+=extra
-  cr=' › '.join(f'<a href="/mapot/{p}">{html.escape(n)}</a>' for n,p in [(B,'')]+crumbs)
-  rob='<meta name="robots" content="noindex">' if C['preview'] else ''
+ORG={"@type":"LocalBusiness","@id":BASE+"#business","name":B,"url":BASE,"telephone":"+972-53-2535393","email":"office@hayahara.co.il","parentOrganization":{"@id":"https://hayahara.co.il/#business"},"address":{"@type":"PostalAddress","streetAddress":"פרי גן 16","addressLocality":"מישור אדומים","addressCountry":"IL"}}
+NAV=[('/mapot/catalog/','קטלוג'),('/mapot/tablecloths/','מפות'),('/mapot/napkins/','מפיות'),('/mapot/runners/','ראנרים'),('/mapot/chair-covers/','כיסויי כיסאות'),('/mapot/halls-catering/','אולמות וקייטרינג'),('/mapot/service-areas/','אזורי שירות'),('/mapot/faq/','שאלות נפוצות')]
+EVENTS=['/mapot/wedding/','/mapot/bar-mitzvah/','/mapot/brit/','/mapot/sheva-brachot/','/mapot/halls-catering/']
+def esc(s):return html.escape(s.replace('[ממתין לצבי]','(ממתין לאישור)'))
+def page(url,title,desc,crumbs,body,extra=None,noindex=False):
+  path=url[len('/mapot/'):];g=[ORG,{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":i+1,"name":n,"item":"https://hayahara.co.il"+u} for i,(n,u) in enumerate([(B,'/mapot/')]+crumbs)]}]+(extra or [])
+  cr=' › '.join(f'<a href="{u}">{html.escape(n)}</a>' for n,u in [(B,'/mapot/')]+crumbs)
+  rob='<meta name="robots" content="noindex">' if (C['preview'] or noindex) else ''
   h=f"""<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{html.escape(title)} | {B}</title><meta name="description" content="{html.escape(desc)}">{rob}<link rel="canonical" href="{url}">
-<meta property="og:title" content="{html.escape(title)}"><meta property="og:description" content="{html.escape(desc)}"><meta property="og:url" content="{url}"><meta property="og:locale" content="he_IL">
-<link rel="stylesheet" href="/mapot/assets/mapot.css"><script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@graph":g},ensure_ascii=False)}</script></head><body>
-<header><a class="logo" href="/mapot/">{B}</a><nav><a href="/mapot/catalog/">קטלוג</a><a href="/mapot/events/">אירועים</a><a href="/mapot/areas/">אזורי משלוח</a><a href="/mapot/faq/">שאלות נפוצות</a></nav></header>
-<main><div class="crumb">{cr}</div>{body}<p><a class="btn" href="{WA}">הזמנה בוואטסאפ {PH}</a></p></main>
-<footer>{B} – השכרת מפות, מפיות, ראנרים, כיסויי כיסאות, מצעים ומגבות לאירועים. חלק ממכבסת <a href="https://hayahara.co.il/">היערה</a>, הפועלת מאז 1980. וואטסאפ: <a href="{WA}">{PH}</a></footer>
-<a class="fab" href="{WA}">וואטסאפ להזמנה</a></body></html>"""
-  d=os.path.join(OUT,path);os.makedirs(d,exist_ok=True);open(os.path.join(d,'index.html'),'w').write(h);pages.append((path,title))
-ph=lambda t:f'<div class="ph">מקום לתמונה אמיתית: {t} (TODO)</div>'
-cards=lambda L:'<div class="grid">'+''.join(f'<a class="card" href="/mapot/{p}"><strong>{n}</strong><br><small>{s}</small></a>' for p,n,s in L)+'</div>'
-catcards=cards([(f'catalog/{c}/',n,d) for c,n,d in CATS])
-page('',f'{B} – השכרת מפות ומפיות לאירועים',f'{B}: השכרת מפות, מפיות, ראנרים, כיסויי כיסאות, מצעים ומגבות לאירועים. סט נקי ומגוהץ, הזמנה בוואטסאפ.',[],
- f'<section class="hero"><h1>{B}</h1><p>השכרת מפות, מפיות, ראנרים, כיסויי כיסאות, מצעים ומגבות לאירועים. כל סט מגיע נקי ומגוהץ.</p><a class="btn" href="{WA}">להזמנה בוואטסאפ</a></section>{ph("עמוד הבית")}<h2>הקטלוג</h2>{catcards}<h2>לפי סוג אירוע</h2>'+cards([(f'events/{e}/',n,'') for e,n in EVENTS])+'<h2>אזורי משלוח</h2>'+cards([(f'areas/{a}/',n,'') for a,n in AREAS])+'<p class="todo">TODO: טקסט עמוד הבית יגיע מהקופירייטר.</p>')
-page('catalog/','קטלוג השכרת מפות ומפיות','קטלוג פריטים להשכרה לאירועים: מפות לפי מידה, מפיות, ראנרים, כיסויי כיסאות, מצעים ומגבות.',[('קטלוג','catalog/')],'<h1>קטלוג</h1>'+catcards)
-for c,n,d in CATS:
-  its=ITEMS[c];base=f'catalog/{c}/'
-  page(base,f'השכרת {n} לאירועים',f'השכרת {n} לאירועים מבית {B}. {d}',[('קטלוג','catalog/'),(n,base)],f'<h1>השכרת {n}</h1><p>{d}</p>{ph(n)}'+cards([(base+s+'/',t,ds) for s,t,ds,_ in its]),
-   [{"@type":"Service","name":f"השכרת {n}","provider":{"@id":BASE+"#business"},"url":BASE+base}])
-  for s,t,ds,todo in its:
-    p=base+s+'/'
-    page(p,f'{t} להשכרה',f'{t} להשכרה לאירועים. {ds}',[('קטלוג','catalog/'),(n,base),(t,p)],f'<h1>{t}</h1>'+(f'<p class="todo">{ds}</p>' if todo else f'<p>{ds}</p>')+ph(t)+'<p class="todo">TODO: מחיר וזמינות – לפי פנייה בוואטסאפ; טקסט מהקופירייטר.</p>',
-     None if todo else [{"@type":"Product","name":t,"description":ds,"category":n,"brand":{"@type":"Brand","name":B},"url":BASE+p}])
-page('areas/','אזורי משלוח','אזורי משלוח להשכרת מפות ומפיות לאירועים.',[('אזורי משלוח','areas/')],'<h1>אזורי משלוח</h1><p class="todo">TODO: רשימת האזורים ממתינה לאישור צבי.</p>'+cards([(f'areas/{a}/',n,'') for a,n in AREAS]))
-for a,n in AREAS:
-  page(f'areas/{a}/',f'השכרת מפות ומפיות ב{n}',f'השכרת מפות, מפיות, ראנרים וכיסויי כיסאות לאירועים ב{n}. הזמנה בוואטסאפ.',[('אזורי משלוח','areas/'),(n,f'areas/{a}/')],f'<h1>השכרת מפות ומפיות ב{n}</h1><p>{B} משכירה מפות, מפיות, ראנרים, כיסויי כיסאות, מצעים ומגבות לאירועים ב{n}.</p><p class="todo">TODO: אזור ממתין לאישור; פרטי משלוח וטקסט מהקופירייטר.</p>'+catcards,
-   [{"@type":"Service","name":f"השכרת מפות ב{n}","provider":{"@id":BASE+"#business"},"areaServed":n}])
-page('events/','השכרת מפות לפי סוג אירוע','השכרת מפות ומפיות לחתונות, בר מצווה, אולמות וקייטרינג.',[('אירועים','events/')],'<h1>לפי סוג אירוע</h1>'+cards([(f'events/{e}/',n,'') for e,n in EVENTS]))
-for e,n in EVENTS:
-  page(f'events/{e}/',f'השכרת מפות ומפיות ל{n}',f'השכרת מפות, מפיות, ראנרים וכיסויי כיסאות ל{n}. סט נקי ומגוהץ.',[('אירועים','events/'),(n,f'events/{e}/')],f'<h1>השכרת מפות ומפיות ל{n}</h1><p>מפות, מפיות, ראנרים וכיסויי כיסאות ל{n}. כל סט מגיע נקי ומגוהץ.</p>{ph(n)}<p class="todo">TODO: טקסט מהקופירייטר.</p>'+catcards,
-   [{"@type":"Service","name":f"השכרת מפות ל{n}","provider":{"@id":BASE+"#business"}}])
-page('faq/','שאלות נפוצות',f'שאלות נפוצות על השכרת מפות ומפיות ב{B}.',[('שאלות נפוצות','faq/')],'<h1>שאלות נפוצות</h1>'+''.join(f'<h3>{q}</h3><p>{a}</p>' for q,a in FAQ),
- [{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in FAQ]}])
-os.makedirs(OUT+'/assets',exist_ok=True);open(OUT+'/assets/mapot.css','w').write(CSS)
-RED={'/services/tablecloth-rental.html':'/mapot/','/services/event-hall-tablecloth-rental.html':'/mapot/events/halls/','/services/tablecloth-rental-jerusalem.html':'/mapot/areas/jerusalem/','/services/tablecloth-rental-gush-etzion.html':'/mapot/areas/gush-etzion/','/services/tablecloth-rental-sharon.html':'/mapot/areas/','/services/table-linen.html':'/mapot/catalog/tablecloths/'}
+<title>{esc(title)}</title><meta name="description" content="{esc(desc)}">{rob}<link rel="canonical" href="https://hayahara.co.il{url}">
+<meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="https://hayahara.co.il{url}"><meta property="og:locale" content="he_IL"><meta property="og:site_name" content="{html.escape(B)}">
+<link rel="stylesheet" href="/mapot/assets/mapot.css"><script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@graph":g},ensure_ascii=False)}</script><script src="/mapot/assets/cart.js" defer></script></head><body>
+<header><a class="logo" href="/mapot/">{html.escape(B)}</a><a class="cartlink" href="/mapot/order/">סל ההזמנה <span id="cartn">0</span></a>
+<nav>{''.join(f'<a href="{u}">{n}</a>' for u,n in NAV)}</nav></header>
+<main>{'' if not crumbs else f'<div class="crumb">{cr}</div>'}{body}</main>
+<footer><p>{'<br>'.join(html.escape(x) for x in FOOT)}</p><p>טלפון ווואטסאפ: <a href="{WA}">053-2535393</a> | <a href="mailto:office@hayahara.co.il">office@hayahara.co.il</a> | <a href="https://hayahara.co.il/">מכבסת היערה</a></p>
+<p>{' · '.join(f'<a href="{u}">{n}</a>' for u,n in NAV+[(e,P[e]["name"]) for e in EVENTS[:4]])}</p></footer>
+<a class="fab" href="{WA}" aria-label="וואטסאפ להזמנה">וואטסאפ 053-2535393</a></body></html>"""
+  d=os.path.join(OUT,path);os.makedirs(d,exist_ok=True);open(os.path.join(d,'index.html'),'w').write(h)
+  if not (noindex) :pages.append((url,title))
+ph=lambda t:f'<div class="ph">מקום לתמונה אמיתית: {html.escape(t)}</div>'
+def card(p):return f'<a class="card" href="/mapot/catalog/{p["slug"]}/" data-type="{p["cat"]}" data-size="{html.escape(p["size"])}"><div class="ph sm">מקום לתמונה אמיתית</div>{"<span class=ex>דוגמה</span>" if p["example"] else ""}<strong>{inl(p["name"])}</strong><small>{p["catname"]}</small></a>'
+def grid(ps):return '<div class="grid" id="grid">'+''.join(card(p) for p in ps)+'</div>'
+catlinks='<div class="chips">'+''.join(f'<a class="chip" href="/mapot/{c}/">{n}</a>' for c,n,_ in CATS)+'</div>'
+evlinks='<div class="chips">'+''.join(f'<a class="chip" href="{e}">{P[e]["name"]}</a>' for e in EVENTS)+'</div>'
+for url,pg in P.items():
+  body=md2html(pg['lines']);crumbs=[] if url=='/mapot/' else [(pg['name'],url)];extra=[]
+  c=url.strip('/').split('/')[-1]
+  if url=='/mapot/':body=f'<section class="hero">{body.split("</h1>")[0]}</h1><a class="btn" href="/mapot/catalog/">לקטלוג</a> <a class="btn wa" href="{WA}">וואטסאפ 053-2535393</a></section>{ph("עמוד הבית")}'+body.split('</h1>',1)[1]+'<h2>הקטלוג</h2>'+grid(PRODUCTS)+'<h2>לפי סוג אירוע</h2>'+evlinks
+  elif c in [x for x,_,_ in CATS]:
+    crumbs=[('קטלוג','/mapot/catalog/'),(pg['name'],url)];body=ph(pg['name'])+body+'<h2>פריטים</h2>'+grid([p for p in PRODUCTS if p['cat']==c])+catlinks
+    extra=[{"@type":"Service","name":pg['name'],"serviceType":"השכרה","provider":{"@id":BASE+"#business"},"url":"https://hayahara.co.il"+url}]
+  elif url in EVENTS:body=ph(pg['name'])+body+catlinks+evlinks;extra=[{"@type":"Service","name":re.sub(r'<.*?>','',pg['title'].split('|')[0]).strip(),"provider":{"@id":BASE+"#business"}}]
+  elif url=='/mapot/faq/':
+    qa=re.findall(r'^## (.+)\n(.+)','\n'.join(pg['lines']),re.M)
+    extra=[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in qa if '[ממתין לצבי]' not in a]}]
+  elif url=='/mapot/service-areas/':extra=[{"@type":"Service","name":"השכרת מפות ומפיות","provider":{"@id":BASE+"#business"},"areaServed":["השרון","גוש דן","עוטף ירושלים","ים המלח","גוש עציון"]}];body+=catlinks
+  page(url,pg['title'],pg['desc'],crumbs,body+f'<p><a class="btn" href="/mapot/catalog/">לקטלוג ולהזמנה</a></p>',extra)
+# catalog with filters
+sizes=sorted({p['size'] for p in PRODUCTS})
+flt='<div class="filters"><label>סוג <select id="ft"><option value="">הכול</option>'+''.join(f'<option value="{c}">{n}</option>' for c,n,_ in CATS)+'</select></label><label>מידה <select id="fs"><option value="">הכול</option>'+''.join(f'<option>{html.escape(s)}</option>' for s in sizes)+'</select></label></div>'
+page('/mapot/catalog/',f'קטלוג השכרת מפות, מפיות, ראנרים וכיסויי כיסאות | {B}',f'קטלוג {B}: מפות, מפיות, ראנרים וכיסויי כיסאות להשכרה. בוחרים פריטים וכמויות ושולחים בקשת הזמנה.',[('קטלוג','/mapot/catalog/')],
+ '<h1>קטלוג</h1><p>בוחרים פריטים, מוסיפים להזמנה ושולחים. את הכמויות ואת המשלוח מאשרים איתכם בשיחה.</p><p class="note">פריטים המסומנים «דוגמה» הם תבנית לתצוגה; פרטי הפריט <span class="pend">[ממתין לצבי]</span>.</p>'+flt+grid(PRODUCTS)+catlinks)
+for p in PRODUCTS:
+  t=p['t'];url=f'/mapot/catalog/{p["slug"]}/'
+  body=f'<div class="prod"><div class="ph big">מקום לתמונה אמיתית: {html.escape(p["name"])}</div><div><h1>{inl(p["name"])}</h1>{"<p class=note>דוגמה: פריט לתצוגה, פרטיו ממתינים לאישור.</p>" if p["example"] else ""}<p>{inl(p["desc"])}</p><ul>'+''.join(f'<li>{inl(x)}</li>' for x in t['pts'])+f'</ul><label class="qty">{html.escape(t["qty"])}<input type="number" id="q" min="1" max="10000" value="1" inputmode="numeric"></label><button class="btn" id="add" data-slug="{p["slug"]}" data-name="{html.escape(p["name"])}">{t["btn"]}</button> <span id="added" hidden>נוסף לסל. <a href="/mapot/order/">לסל ההזמנה</a></span></div></div>'
+  ex=None if p['example'] else [{"@type":"Product","name":p['name'].replace(W,'').strip(' |'),"description":p['desc'].replace(W,'').replace('  ',' '),"category":p['catname'],"size":p['size'],"brand":{"@type":"Brand","name":B},"url":"https://hayahara.co.il"+url}]
+  page(url,f'{p["name"]} | {B}',re.sub(r'\s+',' ',p['desc']),[('קטלוג','/mapot/catalog/'),(p['catname'],f'/mapot/{p["cat"]}/'),(p['name'],url)],body,ex,noindex=p['example'])
+labels=cl['תוויות שדות'].split(' | ');names=['business','contact','phone','email','event_date','address','notes'];types=['text','text','tel','email','date','text','textarea']
+req={'contact','phone','event_date','address'}
+fields=''.join(f'<label>{l}{" *" if n in req else ""}'+(f'<textarea name="{n}" maxlength="1000"></textarea>' if t=='textarea' else f'<input name="{n}" type="{t}" maxlength="200"{" required" if n in req else ""}{" pattern=0?5[0-9]-?[0-9]{{7}}|0[2-9]-?[0-9]{{7}}" if n=="phone" else ""}>')+'</label>' for l,n,t in zip(labels,names,types))
+page('/mapot/order/',cart['title'],cart['desc'],[('סל ההזמנה','/mapot/order/')],
+ f'<h1>סל ההזמנה</h1><p>{inl(cl["טקסט פתיחה"])}</p><div id="empty" hidden><p>{inl(cl["סל ריק"])}</p><a class="btn" href="/mapot/catalog/">לקטלוג</a></div><div id="cartbox"><table id="cart"></table>'
+ f'<form id="orderform" novalidate>{fields}<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label><button class="btn" type="submit">{cl["כפתור"]}</button><p id="err" class="err" hidden></p></form></div><div id="done" hidden><p>{inl(cl["הודעת אישור"])}</p></div>')
+# admin (not in sitemap)
+os.makedirs(OUT+'/admin',exist_ok=True)
+open(OUT+'/admin/index.html','w').write(f'''<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ניהול הזמנות | {html.escape(B)}</title><link rel="stylesheet" href="/mapot/assets/mapot.css"></head><body><main>
+<h1>ניהול הזמנות</h1><form id="login"><label>משתמש<input id="u" autocomplete="username" required></label><label>סיסמה<input id="p" type="password" autocomplete="current-password" required></label><button class="btn">כניסה</button><p id="lerr" class="err" hidden></p></form>
+<div id="list" hidden><button class="btn" id="reload">רענון</button><div id="orders"></div></div></main><script src="/mapot/assets/admin.js"></script></body></html>''')
+os.makedirs(OUT+'/assets',exist_ok=True)
+for f in ('mapot.css','cart.js','admin.js'):shutil.copy(os.path.join(R,f),OUT+'/assets/'+f)
+RED={'/services/tablecloth-rental.html':'/mapot/','/services/event-hall-tablecloth-rental.html':'/mapot/halls-catering/','/services/tablecloth-rental-jerusalem.html':'/mapot/service-areas/','/services/tablecloth-rental-gush-etzion.html':'/mapot/service-areas/','/services/tablecloth-rental-sharon.html':'/mapot/service-areas/','/services/table-linen.html':'/mapot/tablecloths/'}
 json.dump(RED,open(OUT+'/_redirects.json','w'),ensure_ascii=False,indent=1)
-open(OUT+'/sitemap-mapot.txt','w').write('\n'.join(BASE+p for p,_ in pages))
-open(OUT+'/llms-section.txt','w').write(f'\n## {B} – השכרת מפות לאירועים (חלק ממכבסת היערה)\n'+'\n'.join(f'- {BASE}{p}: {t}' for p,t in pages)+'\n')
-print(len(pages))
+open(OUT+'/sitemap-mapot.txt','w').write('\n'.join('https://hayahara.co.il'+u for u,_ in pages if u!='/mapot/order/'))
+open(OUT+'/llms-section.txt','w').write(f'\n## {B}: השכרת מפות, מפיות, ראנרים וכיסויי כיסאות (מבית מכבסת היערה)\nהזמנה: טלפון ווואטסאפ 053-2535393, office@hayahara.co.il\n'+'\n'.join(f'- https://hayahara.co.il{u}: {t.replace(W,"").strip()}' for u,t in pages if u!='/mapot/order/')+'\n')
+print(len(pages),'indexable pages;',[u for u,_ in pages])
+json.dump({p['slug']:p['name'] for p in PRODUCTS},open(OUT+'/_products.json','w'),ensure_ascii=False)
