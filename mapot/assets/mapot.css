@@ -48,3 +48,4 @@ footer p{max-width:1180px;margin:0 auto 14px}footer a{color:var(--ink)}
 .fab{position:fixed;bottom:18px;left:18px;background:var(--ink);color:var(--paper);padding:11px 20px;font-size:.82rem;letter-spacing:.06em;text-decoration:none}
 .order{border-bottom:1px solid var(--line);padding:14px 0;margin:0}
 @media(max-width:600px){body{font-size:16px}.grid{grid-template-columns:1fr 1fr;gap:28px 14px}.card strong{font-size:1rem}header{padding-top:14px}.logo{font-size:1.35rem}}
+[hidden]{display:none!important}
