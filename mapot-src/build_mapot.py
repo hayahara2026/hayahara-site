@@ -59,7 +59,7 @@ def page(url,title,desc,crumbs,body,extra=None,noindex=False):
   h=f"""<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc)}">{rob}<link rel="canonical" href="https://hayahara.co.il{url}">
 <meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="https://hayahara.co.il{url}"><meta property="og:locale" content="he_IL"><meta property="og:site_name" content="{html.escape(B)}">
-<link rel="stylesheet" href="/mapot/assets/mapot.css"><script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@graph":g},ensure_ascii=False)}</script><script src="/mapot/assets/cart.js" defer></script></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500&family=Heebo:wght@300;400;500&display=swap"><link rel="stylesheet" href="/mapot/assets/mapot.css"><script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@graph":g},ensure_ascii=False)}</script><script src="/mapot/assets/cart.js" defer></script></head><body>
 <header><a class="logo" href="/mapot/">{html.escape(B)}</a><a class="cartlink" href="/mapot/order/">סל ההזמנה <span id="cartn">0</span></a>
 <nav>{''.join(f'<a href="{u}">{n}</a>' for u,n in NAV)}</nav></header>
 <main>{'' if not crumbs else f'<div class="crumb">{cr}</div>'}{body}</main>
@@ -68,15 +68,15 @@ def page(url,title,desc,crumbs,body,extra=None,noindex=False):
 <a class="fab" href="{WA}" aria-label="וואטסאפ להזמנה">וואטסאפ 053-2535393</a></body></html>"""
   d=os.path.join(OUT,path);os.makedirs(d,exist_ok=True);open(os.path.join(d,'index.html'),'w').write(h)
   if not (noindex) :pages.append((url,title))
-ph=lambda t:f'<div class="ph">מקום לתמונה אמיתית: {html.escape(t)}</div>'
-def card(p):return f'<a class="card" href="/mapot/catalog/{p["slug"]}/" data-type="{p["cat"]}" data-size="{html.escape(p["size"])}"><div class="ph sm">מקום לתמונה אמיתית</div>{"<span class=ex>דוגמה</span>" if p["example"] else ""}<strong>{inl(p["name"])}</strong><small>{p["catname"]}</small></a>'
+ph=lambda t:f'<div class="ph">תמונה תתווסף · {html.escape(t)}</div>'
+def card(p):return f'<a class="card" href="/mapot/catalog/{p["slug"]}/" data-type="{p["cat"]}" data-size="{html.escape(p["size"])}"><div class="ph sm">תמונה תתווסף</div>{"<span class=ex>דוגמה</span>" if p["example"] else ""}<strong>{inl(p["name"])}</strong><small>{p["catname"]}</small></a>'
 def grid(ps):return '<div class="grid" id="grid">'+''.join(card(p) for p in ps)+'</div>'
 catlinks='<div class="chips">'+''.join(f'<a class="chip" href="/mapot/{c}/">{n}</a>' for c,n,_ in CATS)+'</div>'
 evlinks='<div class="chips">'+''.join(f'<a class="chip" href="{e}">{P[e]["name"]}</a>' for e in EVENTS)+'</div>'
 for url,pg in P.items():
   body=md2html(pg['lines']);crumbs=[] if url=='/mapot/' else [(pg['name'],url)];extra=[]
   c=url.strip('/').split('/')[-1]
-  if url=='/mapot/':body=f'<section class="hero">{body.split("</h1>")[0]}</h1><a class="btn" href="/mapot/catalog/">לקטלוג</a> <a class="btn wa" href="{WA}">וואטסאפ 053-2535393</a></section>{ph("עמוד הבית")}'+body.split('</h1>',1)[1]+'<h2>הקטלוג</h2>'+grid(PRODUCTS)+'<h2>לפי סוג אירוע</h2>'+evlinks
+  if url=='/mapot/':body=f'<section class="hero"><span class="eyebrow">השכרת טקסטיל לשולחן האירוע</span>{body.split("</h1>")[0]}</h1><a class="btn" href="/mapot/catalog/">לקטלוג</a> <a class="btn wa" href="{WA}">וואטסאפ 053-2535393</a></section>{ph("עמוד הבית")}'+body.split('</h1>',1)[1]+'<h2>הקטלוג</h2>'+grid(PRODUCTS)+'<h2>לפי סוג אירוע</h2>'+evlinks
   elif c in [x for x,_,_ in CATS]:
     crumbs=[('קטלוג','/mapot/catalog/'),(pg['name'],url)];body=ph(pg['name'])+body+'<h2>פריטים</h2>'+grid([p for p in PRODUCTS if p['cat']==c])+catlinks
     extra=[{"@type":"Service","name":pg['name'],"serviceType":"השכרה","provider":{"@id":BASE+"#business"},"url":"https://hayahara.co.il"+url}]
@@ -93,7 +93,7 @@ page('/mapot/catalog/',f'קטלוג השכרת מפות, מפיות, ראנרי�
  '<h1>קטלוג</h1><p>בוחרים פריטים, מוסיפים להזמנה ושולחים. את הכמויות ואת המשלוח מאשרים איתכם בשיחה.</p><p class="note">פריטים המסומנים «דוגמה» הם תבנית לתצוגה; פרטי הפריט <span class="pend">[ממתין לצבי]</span>.</p>'+flt+grid(PRODUCTS)+catlinks)
 for p in PRODUCTS:
   t=p['t'];url=f'/mapot/catalog/{p["slug"]}/'
-  body=f'<div class="prod"><div class="ph big">מקום לתמונה אמיתית: {html.escape(p["name"])}</div><div><h1>{inl(p["name"])}</h1>{"<p class=note>דוגמה: פריט לתצוגה, פרטיו ממתינים לאישור.</p>" if p["example"] else ""}<p>{inl(p["desc"])}</p><ul>'+''.join(f'<li>{inl(x)}</li>' for x in t['pts'])+f'</ul><label class="qty">{html.escape(t["qty"])}<input type="number" id="q" min="1" max="10000" value="1" inputmode="numeric"></label><button class="btn" id="add" data-slug="{p["slug"]}" data-name="{html.escape(p["name"])}">{t["btn"]}</button> <span id="added" hidden>נוסף לסל. <a href="/mapot/order/">לסל ההזמנה</a></span></div></div>'
+  body=f'<div class="prod"><div class="ph big">תמונה תתווסף</div><div><h1>{inl(p["name"])}</h1>{"<p class=note>דוגמה: פריט לתצוגה, פרטיו ממתינים לאישור.</p>" if p["example"] else ""}<p>{inl(p["desc"])}</p><ul>'+''.join(f'<li>{inl(x)}</li>' for x in t['pts'])+f'</ul><label class="qty">{html.escape(t["qty"])}<input type="number" id="q" min="1" max="10000" value="1" inputmode="numeric"></label><button class="btn" id="add" data-slug="{p["slug"]}" data-name="{html.escape(p["name"])}">{t["btn"]}</button> <span id="added" hidden>נוסף לסל. <a href="/mapot/order/">לסל ההזמנה</a></span></div></div>'
   ex=None if p['example'] else [{"@type":"Product","name":p['name'].replace(W,'').strip(' |'),"description":p['desc'].replace(W,'').replace('  ',' '),"category":p['catname'],"size":p['size'],"brand":{"@type":"Brand","name":B},"url":"https://hayahara.co.il"+url}]
   page(url,f'{p["name"]} | {B}',re.sub(r'\s+',' ',p['desc']),[('קטלוג','/mapot/catalog/'),(p['catname'],f'/mapot/{p["cat"]}/'),(p['name'],url)],body,ex,noindex=p['example'])
 labels=cl['תוויות שדות'].split(' | ');names=['business','contact','phone','email','event_date','address','notes'];types=['text','text','tel','email','date','text','textarea']
@@ -104,7 +104,7 @@ page('/mapot/order/',cart['title'],cart['desc'],[('סל ההזמנה','/mapot/or
  f'<form id="orderform" novalidate>{fields}<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label><button class="btn" type="submit">{cl["כפתור"]}</button><p id="err" class="err" hidden></p></form></div><div id="done" hidden><p>{inl(cl["הודעת אישור"])}</p></div>')
 # admin (not in sitemap)
 os.makedirs(OUT+'/admin',exist_ok=True)
-open(OUT+'/admin/index.html','w').write(f'''<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ניהול הזמנות | {html.escape(B)}</title><link rel="stylesheet" href="/mapot/assets/mapot.css"></head><body><main>
+open(OUT+'/admin/index.html','w').write(f'''<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ניהול הזמנות | {html.escape(B)}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500&family=Heebo:wght@300;400;500&display=swap"><link rel="stylesheet" href="/mapot/assets/mapot.css"></head><body><main>
 <h1>ניהול הזמנות</h1><form id="login"><label>משתמש<input id="u" autocomplete="username" required></label><label>סיסמה<input id="p" type="password" autocomplete="current-password" required></label><button class="btn">כניסה</button><p id="lerr" class="err" hidden></p></form>
 <div id="list" hidden><button class="btn" id="reload">רענון</button><div id="orders"></div></div></main><script src="/mapot/assets/admin.js"></script></body></html>''')
 os.makedirs(OUT+'/assets',exist_ok=True)
