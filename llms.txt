@@ -43,9 +43,7 @@
 - https://hayahara.co.il/services/: שירותי כביסה תעשייתית לעסקים ולמוסדות
 - https://hayahara.co.il/services/linen-towels.html: כביסת מצעים ומגבות לבתי מלון, מוסדות ועסקים
 - https://hayahara.co.il/services/uniforms.html: כביסת מדי עובדים, סרבלים וביגוד מטבח
-- https://hayahara.co.il/services/table-linen.html: כביסת מפות, מפיות וסינרים לאולמות ולקייטרינג
 - https://hayahara.co.il/services/dry-cleaning.html: ניקוי יבש לעסקים: וילונות, מדים ופריטים עדינים
-- https://hayahara.co.il/services/tablecloth-rental.html: השכרת מפות ומפיות לאירועים ולעסקים: מפות, מפיות בד, ראנרים וכיסויי כיסאות
 - https://hayahara.co.il/services/linen-rental.html: השכרת מצעים ומגבות לעסקים ולמוסדות: מגבות, סדינים וציפות
 - https://hayahara.co.il/services/hotels.html: מכבסה לבתי מלון
 - https://hayahara.co.il/services/institutions.html: כביסה למוסדות, פנימיות ובתי אבות
@@ -56,7 +54,6 @@
 - https://hayahara.co.il/services/institution-linen-laundry.html: כביסת מצעים למוסדות, פנימיות ובתי אבות
 - https://hayahara.co.il/services/institution-staff-uniforms.html: כביסת מדי צוות למוסדות ובתי אבות
 - https://hayahara.co.il/services/catering-table-linen-laundry.html: כביסת מפות ומפיות לקייטרינג
-- https://hayahara.co.il/services/event-hall-tablecloth-rental.html: השכרת מפות ומפיות לאולמות אירועים
 - https://hayahara.co.il/services/restaurant-uniforms-laundry.html: כביסת מדים, ביגוד מטבח וסינרים למסעדות
 - https://hayahara.co.il/services/restaurant-table-linen-laundry.html: כביסת מפות ומפיות למסעדות
 - https://hayahara.co.il/services/industrial-laundry-jerusalem.html: מכבסה תעשייתית בירושלים: איסוף ומסירה לעסקים ולמוסדות
@@ -66,12 +63,43 @@
 - https://hayahara.co.il/services/industrial-laundry-sharon.html: מכבסה תעשייתית בשרון (למשל נתניה, רעננה, כפר סבא)
 - https://hayahara.co.il/services/institutional-laundry-jerusalem.html: מכבסה למוסדות בירושלים: ישיבות, פנימיות ובתי אבות
 - https://hayahara.co.il/services/institutional-laundry-tel-aviv.html: מכבסה למוסדות בתל אביב ובמרכז
-- https://hayahara.co.il/services/tablecloth-rental-jerusalem.html: השכרת מפות ומפיות בירושלים
-- https://hayahara.co.il/services/tablecloth-rental-gush-etzion.html: השכרת מפות ומפיות בגוש עציון
-- https://hayahara.co.il/services/tablecloth-rental-sharon.html: השכרת מפות ומפיות בשרון
 - https://hayahara.co.il/about.html: אודות מכבסת היערה
 - https://hayahara.co.il/contact.html: צור קשר ומפה
 - https://hayahara.co.il/faq.html: שאלות נפוצות
 - https://hayahara.co.il/accessibility.html: הצהרת נגישות
 - https://hayahara.co.il/privacy.html: מדיניות פרטיות
 - https://hayahara.co.il/terms.html: תקנון ותנאי שימוש
+
+## שם המותג – השכרת מפות לאירועים (חלק ממכבסת היערה)
+- https://hayahara.co.il/mapot/: שם המותג – השכרת מפות ומפיות לאירועים
+- https://hayahara.co.il/mapot/catalog/: קטלוג השכרת מפות ומפיות
+- https://hayahara.co.il/mapot/catalog/tablecloths/: השכרת מפות לאירועים
+- https://hayahara.co.il/mapot/catalog/tablecloths/3x3/: מפה 3×3 להשכרה
+- https://hayahara.co.il/mapot/catalog/tablecloths/size-todo-1/: מפה – מידה נוספת (TODO) להשכרה
+- https://hayahara.co.il/mapot/catalog/napkins/: השכרת מפיות לאירועים
+- https://hayahara.co.il/mapot/catalog/napkins/napkin-todo/: מפית בד (TODO) להשכרה
+- https://hayahara.co.il/mapot/catalog/runners/: השכרת ראנרים לאירועים
+- https://hayahara.co.il/mapot/catalog/runners/runner-todo/: ראנר (TODO) להשכרה
+- https://hayahara.co.il/mapot/catalog/chair-covers/: השכרת כיסויי כיסאות לאירועים
+- https://hayahara.co.il/mapot/catalog/chair-covers/chair-cover-todo/: כיסוי כיסא (TODO) להשכרה
+- https://hayahara.co.il/mapot/catalog/bedding/: השכרת מצעים לאירועים
+- https://hayahara.co.il/mapot/catalog/bedding/bedding-todo/: סט מצעים (TODO) להשכרה
+- https://hayahara.co.il/mapot/catalog/towels/: השכרת מגבות לאירועים
+- https://hayahara.co.il/mapot/catalog/towels/towel-todo/: מגבת (TODO) להשכרה
+- https://hayahara.co.il/mapot/areas/: אזורי משלוח
+- https://hayahara.co.il/mapot/areas/jerusalem/: השכרת מפות ומפיות בירושלים
+- https://hayahara.co.il/mapot/areas/gush-etzion/: השכרת מפות ומפיות בגוש עציון
+- https://hayahara.co.il/mapot/areas/kfar-saba/: השכרת מפות ומפיות בכפר סבא
+- https://hayahara.co.il/mapot/areas/raanana/: השכרת מפות ומפיות ברעננה
+- https://hayahara.co.il/mapot/areas/netanya/: השכרת מפות ומפיות בנתניה
+- https://hayahara.co.il/mapot/areas/beit-shemesh/: השכרת מפות ומפיות בבית שמש
+- https://hayahara.co.il/mapot/areas/beitar-illit/: השכרת מפות ומפיות בביתר עילית
+- https://hayahara.co.il/mapot/areas/modiin-illit/: השכרת מפות ומפיות במודיעין עילית
+- https://hayahara.co.il/mapot/areas/bnei-brak/: השכרת מפות ומפיות בבני ברק
+- https://hayahara.co.il/mapot/areas/elad/: השכרת מפות ומפיות באלעד
+- https://hayahara.co.il/mapot/events/: השכרת מפות לפי סוג אירוע
+- https://hayahara.co.il/mapot/events/weddings/: השכרת מפות ומפיות לחתונות
+- https://hayahara.co.il/mapot/events/bar-mitzvah/: השכרת מפות ומפיות לבר מצווה
+- https://hayahara.co.il/mapot/events/halls/: השכרת מפות ומפיות לאולמות אירועים
+- https://hayahara.co.il/mapot/events/catering/: השכרת מפות ומפיות לקייטרינג
+- https://hayahara.co.il/mapot/faq/: שאלות נפוצות

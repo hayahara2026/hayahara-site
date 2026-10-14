@@ -1,0 +1,10 @@
+*{box-sizing:border-box}body{margin:0;font-family:'Assistant','Rubik',system-ui,sans-serif;background:#fbf7f0;color:#2b2233;line-height:1.7}
+a{color:#7a2e5a}header{background:#2b2233;color:#fbf7f0;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.logo{font-family:Georgia,'Frank Ruhl Libre',serif;font-size:1.5rem;letter-spacing:.04em;color:#e8c27a;text-decoration:none;border:2px solid #e8c27a;padding:2px 12px;border-radius:30px}
+nav a{color:#fbf7f0;margin-inline-start:12px;text-decoration:none;font-size:.95rem}main{max-width:960px;margin:auto;padding:16px}
+.hero{background:linear-gradient(135deg,#7a2e5a,#2b2233);color:#fff;border-radius:18px;padding:32px 20px;margin:12px 0}
+.hero h1{font-family:Georgia,serif;margin:0 0 8px}.btn{display:inline-block;background:#25d366;color:#08311a;font-weight:700;padding:12px 22px;border-radius:30px;text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}.card{background:#fff;border:1px solid #eadfcc;border-radius:14px;padding:14px;text-decoration:none;color:inherit}
+.ph{background:repeating-linear-gradient(45deg,#f1e8d8,#f1e8d8 10px,#fbf7f0 10px,#fbf7f0 20px);border:2px dashed #c9b48a;border-radius:12px;min-height:150px;display:flex;align-items:center;justify-content:center;color:#8a7650;font-size:.9rem;margin:10px 0}
+.todo{background:#fff3cd;border:1px dashed #d4a017;padding:6px 10px;border-radius:8px}.crumb{font-size:.85rem}footer{background:#2b2233;color:#cfc3d6;padding:20px 16px;margin-top:30px;font-size:.9rem}footer a{color:#e8c27a}
+.fab{position:fixed;bottom:16px;left:16px;background:#25d366;color:#08311a;border-radius:30px;padding:12px 18px;font-weight:700;text-decoration:none;box-shadow:0 4px 12px #0003}

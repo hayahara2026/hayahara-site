@@ -4,9 +4,7 @@
   <url><loc>https://hayahara.co.il/services/</loc><lastmod>2026-10-11</lastmod><priority>0.9</priority></url>
   <url><loc>https://hayahara.co.il/services/linen-towels.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
   <url><loc>https://hayahara.co.il/services/uniforms.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
-  <url><loc>https://hayahara.co.il/services/table-linen.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
   <url><loc>https://hayahara.co.il/services/dry-cleaning.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
-  <url><loc>https://hayahara.co.il/services/tablecloth-rental.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
   <url><loc>https://hayahara.co.il/services/linen-rental.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
   <url><loc>https://hayahara.co.il/services/hotels.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
   <url><loc>https://hayahara.co.il/services/institutions.html</loc><lastmod>2026-10-11</lastmod><priority>0.8</priority></url>
@@ -17,7 +15,6 @@
   <url><loc>https://hayahara.co.il/services/institution-linen-laundry.html</loc><lastmod>2026-10-11</lastmod><priority>0.7</priority></url>
   <url><loc>https://hayahara.co.il/services/institution-staff-uniforms.html</loc><lastmod>2026-10-11</lastmod><priority>0.7</priority></url>
   <url><loc>https://hayahara.co.il/services/catering-table-linen-laundry.html</loc><lastmod>2026-10-11</lastmod><priority>0.7</priority></url>
-  <url><loc>https://hayahara.co.il/services/event-hall-tablecloth-rental.html</loc><lastmod>2026-10-11</lastmod><priority>0.7</priority></url>
   <url><loc>https://hayahara.co.il/services/restaurant-uniforms-laundry.html</loc><lastmod>2026-10-11</lastmod><priority>0.7</priority></url>
   <url><loc>https://hayahara.co.il/services/restaurant-table-linen-laundry.html</loc><lastmod>2026-10-11</lastmod><priority>0.7</priority></url>
   <url><loc>https://hayahara.co.il/services/industrial-laundry-jerusalem.html</loc><lastmod>2026-10-11</lastmod><priority>0.7</priority></url>
@@ -33,7 +30,36 @@
 <url><loc>https://hayahara.co.il/services/industrial-laundry-sharon.html</loc><lastmod>2026-10-13</lastmod><priority>0.7</priority></url>
 <url><loc>https://hayahara.co.il/services/institutional-laundry-jerusalem.html</loc><lastmod>2026-10-13</lastmod><priority>0.7</priority></url>
 <url><loc>https://hayahara.co.il/services/institutional-laundry-tel-aviv.html</loc><lastmod>2026-10-13</lastmod><priority>0.7</priority></url>
-<url><loc>https://hayahara.co.il/services/tablecloth-rental-jerusalem.html</loc><lastmod>2026-10-13</lastmod><priority>0.7</priority></url>
-<url><loc>https://hayahara.co.il/services/tablecloth-rental-gush-etzion.html</loc><lastmod>2026-10-13</lastmod><priority>0.7</priority></url>
-<url><loc>https://hayahara.co.il/services/tablecloth-rental-sharon.html</loc><lastmod>2026-10-13</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/tablecloths/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/tablecloths/3x3/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/tablecloths/size-todo-1/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/napkins/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/napkins/napkin-todo/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/runners/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/runners/runner-todo/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/chair-covers/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/chair-covers/chair-cover-todo/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/bedding/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/bedding/bedding-todo/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/towels/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/catalog/towels/towel-todo/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/jerusalem/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/gush-etzion/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/kfar-saba/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/raanana/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/netanya/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/beit-shemesh/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/beitar-illit/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/modiin-illit/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/bnei-brak/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/areas/elad/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/events/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/events/weddings/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/events/bar-mitzvah/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/events/halls/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/events/catering/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
+  <url><loc>https://hayahara.co.il/mapot/faq/</loc><lastmod>2026-10-14</lastmod><priority>0.7</priority></url>
 </urlset>
