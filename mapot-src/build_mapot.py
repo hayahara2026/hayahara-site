@@ -48,7 +48,7 @@ def fill(s,p):return s.replace('{SIZE}',p['size']).replace(' | {COLOR}','' if p[
 for p in PRODUCTS:
   t=T[[x for c,_,x in CATS if c==p['cat']][0]];p['name']=fill(t['name'],p);p['desc']=fill(t['desc'],p);p['t']=t;p['catname']=[n for c,n,_ in CATS if c==p['cat']][0]
 pages=[]
-ORG={"@type":"LocalBusiness","@id":BASE+"#business","name":B,"url":BASE,"telephone":"+972-53-2535393","email":"office@hayahara.co.il","parentOrganization":{"@id":"https://hayahara.co.il/#business"},"address":{"@type":"PostalAddress","streetAddress":"פרי גן 16","addressLocality":"מישור אדומים","addressCountry":"IL"}}
+ORG={"@type":"LocalBusiness","@id":"https://hayahara.co.il/#business","name":"מכבסת היערה","alternateName":B,"brand":{"@type":"Brand","name":B},"url":BASE,"telephone":"+972-53-2535393","email":"office@hayahara.co.il","address":{"@type":"PostalAddress","streetAddress":"פרי גן 16","addressLocality":"מישור אדומים","addressCountry":"IL"}}
 NAV=[('/mapot/catalog/','קטלוג'),('/mapot/tablecloths/','מפות'),('/mapot/napkins/','מפיות'),('/mapot/runners/','ראנרים'),('/mapot/chair-covers/','כיסויי כיסאות'),('/mapot/halls-catering/','אולמות וקייטרינג'),('/mapot/service-areas/','אזורי שירות'),('/mapot/faq/','שאלות נפוצות')]
 EVENTS=['/mapot/wedding/','/mapot/bar-mitzvah/','/mapot/brit/','/mapot/sheva-brachot/','/mapot/halls-catering/']
 def esc(s):return html.escape(s.replace('[ממתין לצבי]','(ממתין לאישור)'))

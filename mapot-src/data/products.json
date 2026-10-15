@@ -1,0 +1,519 @@
+{
+ "_meta": {
+  "source": "מלאי מפות app, PGlite data\\pglite on Zvi's PC, read-only copy, exported 2026-10-15 ~19:35 IL",
+  "app_has_items_rows": false,
+  "note": "App 'items' table is empty (no stock rows yet). App colors table has only 'שמנת'. 10 colors below are TEMPORARY placeholders; chair covers have NO colors on the site (the app's own chair-cover allowed colors are not exported on purpose). Prices/quantities unknown (null)."
+ },
+ "materials": [
+  {
+   "code": "satin",
+   "name_he": "סאטן",
+   "published": true
+  },
+  {
+   "code": "linen",
+   "name_he": "פשתן",
+   "published": true
+  },
+  {
+   "code": "floral",
+   "name_he": "פרחים",
+   "published": false
+  }
+ ],
+ "sizes": {
+  "tablecloth": [
+   "1.5×1.5",
+   "1.5×3",
+   "2.2×2.2",
+   "3×3",
+   "עגולה"
+  ]
+ },
+ "colors": [
+  {
+   "key": "c01",
+   "name": "לבן",
+   "hex": "#F4F1EA",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c02",
+   "name": "שמנת",
+   "hex": "#EADFC8",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c03",
+   "name": "שמפניה",
+   "hex": "#D9C7A5",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c04",
+   "name": "זהב",
+   "hex": "#B8975A",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c05",
+   "name": "אפור בהיר",
+   "hex": "#BFBFBA",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c06",
+   "name": "אפור פחם",
+   "hex": "#55565A",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c07",
+   "name": "שחור",
+   "hex": "#1E1E20",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c08",
+   "name": "כחול נייבי",
+   "hex": "#23314F",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c09",
+   "name": "ירוק מרווה",
+   "hex": "#8A9A82",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  },
+  {
+   "key": "c10",
+   "name": "בורדו",
+   "hex": "#6B2A35",
+   "placeholder": true,
+   "note": "TEMPORARY placeholder - replace with real colors from Zvi"
+  }
+ ],
+ "products": [
+  {
+   "sku": "TC-SATIN-15X15",
+   "type": "tablecloth",
+   "name_he": "מפה סאטן 1.5×1.5",
+   "material": "satin",
+   "size": "1.5×1.5",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-SATIN-15X3",
+   "type": "tablecloth",
+   "name_he": "מפה סאטן 1.5×3",
+   "material": "satin",
+   "size": "1.5×3",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-SATIN-22X22",
+   "type": "tablecloth",
+   "name_he": "מפה סאטן 2.2×2.2",
+   "material": "satin",
+   "size": "2.2×2.2",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-SATIN-3X3",
+   "type": "tablecloth",
+   "name_he": "מפה סאטן 3×3",
+   "material": "satin",
+   "size": "3×3",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-SATIN-ROUND",
+   "type": "tablecloth",
+   "name_he": "מפה עגולה סאטן",
+   "material": "satin",
+   "size": "עגולה",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": false,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   },
+   "note": "round size exists in app (no diameter); unpublished until Zvi confirms"
+  },
+  {
+   "sku": "TC-LINEN-15X15",
+   "type": "tablecloth",
+   "name_he": "מפה פשתן 1.5×1.5",
+   "material": "linen",
+   "size": "1.5×1.5",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-LINEN-15X3",
+   "type": "tablecloth",
+   "name_he": "מפה פשתן 1.5×3",
+   "material": "linen",
+   "size": "1.5×3",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-LINEN-22X22",
+   "type": "tablecloth",
+   "name_he": "מפה פשתן 2.2×2.2",
+   "material": "linen",
+   "size": "2.2×2.2",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-LINEN-3X3",
+   "type": "tablecloth",
+   "name_he": "מפה פשתן 3×3",
+   "material": "linen",
+   "size": "3×3",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-LINEN-ROUND",
+   "type": "tablecloth",
+   "name_he": "מפה עגולה פשתן",
+   "material": "linen",
+   "size": "עגולה",
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": false,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   },
+   "note": "round size exists in app (no diameter); unpublished until Zvi confirms"
+  },
+  {
+   "sku": "NP-SATIN",
+   "type": "napkin",
+   "name_he": "מפית סאטן",
+   "material": "satin",
+   "size": null,
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "NP-LINEN",
+   "type": "napkin",
+   "name_he": "מפית פשתן",
+   "material": "linen",
+   "size": null,
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "RN-STD",
+   "type": "runner",
+   "name_he": "ראנר",
+   "material": null,
+   "size": null,
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "CC-STD",
+   "type": "chair_cover",
+   "name_he": "כיסויי כיסאות",
+   "material": null,
+   "size": null,
+   "colors": [],
+   "published": true,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   }
+  },
+  {
+   "sku": "TC-FLORAL-*",
+   "type": "tablecloth",
+   "name_he": "מפה פרחים",
+   "material": "floral",
+   "size": null,
+   "colors": [
+    "c01",
+    "c02",
+    "c03",
+    "c04",
+    "c05",
+    "c06",
+    "c07",
+    "c08",
+    "c09",
+    "c10"
+   ],
+   "published": false,
+   "price": null,
+   "min_qty": null,
+   "photos": [],
+   "inventory": {
+    "tracked": false,
+    "qty_total": null,
+    "qty_available": null
+   },
+   "note": "floral material exists in app but Zvi listed only linen/satin; unpublished pending confirmation"
+  }
+ ]
+}
