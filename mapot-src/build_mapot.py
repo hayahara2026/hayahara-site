@@ -102,13 +102,8 @@ fields=''.join(f'<label>{l}{" *" if n in req else ""}'+(f'<textarea name="{n}" m
 page('/mapot/order/',cart['title'],cart['desc'],[('סל ההזמנה','/mapot/order/')],
  f'<h1>סל ההזמנה</h1><p>{inl(cl["טקסט פתיחה"])}</p><div id="empty" hidden><p>{inl(cl["סל ריק"])}</p><a class="btn" href="/mapot/catalog/">לקטלוג</a></div><div id="cartbox"><table id="cart"></table>'
  f'<form id="orderform" novalidate>{fields}<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label><button class="btn" type="submit">{cl["כפתור"]}</button><p id="err" class="err" hidden></p></form></div><div id="done" hidden><p>{inl(cl["הודעת אישור"])}</p></div>')
-# admin (not in sitemap)
-os.makedirs(OUT+'/admin',exist_ok=True)
-open(OUT+'/admin/index.html','w').write(f'''<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ניהול הזמנות | {html.escape(B)}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500&family=Heebo:wght@300;400;500&display=swap"><link rel="stylesheet" href="/mapot/assets/mapot.css"></head><body><main>
-<h1>ניהול הזמנות</h1><form id="login"><label>משתמש<input id="u" autocomplete="username" required></label><label>סיסמה<input id="p" type="password" autocomplete="current-password" required></label><button class="btn">כניסה</button><p id="lerr" class="err" hidden></p></form>
-<div id="list" hidden><button class="btn" id="reload">רענון</button><div id="orders"></div></div></main><script src="/mapot/assets/admin.js"></script></body></html>''')
 os.makedirs(OUT+'/assets',exist_ok=True)
-for f in ('mapot.css','cart.js','admin.js'):shutil.copy(os.path.join(R,f),OUT+'/assets/'+f)
+for f in ('mapot.css','cart.js'):shutil.copy(os.path.join(R,f),OUT+'/assets/'+f)
 RED={'/services/tablecloth-rental.html':'/mapot/','/services/event-hall-tablecloth-rental.html':'/mapot/halls-catering/','/services/tablecloth-rental-jerusalem.html':'/mapot/service-areas/','/services/tablecloth-rental-gush-etzion.html':'/mapot/service-areas/','/services/tablecloth-rental-sharon.html':'/mapot/service-areas/','/services/table-linen.html':'/mapot/tablecloths/'}
 json.dump(RED,open(OUT+'/_redirects.json','w'),ensure_ascii=False,indent=1)
 open(OUT+'/sitemap-mapot.txt','w').write('\n'.join('https://hayahara.co.il'+u for u,_ in pages if u!='/mapot/order/'))
