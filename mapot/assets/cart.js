@@ -259,11 +259,38 @@
   });
  }
 
+ function bindGallery(){
+  var g=document.querySelector('.gallery');
+  if(!g)return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+   g.querySelectorAll('video').forEach(function(v){v.removeAttribute('autoplay');v.pause()});
+  }
+  var zoom=g.querySelector('.zoom');
+  if(zoom)zoom.addEventListener('click',function(){
+   var on=g.classList.toggle('is-zoom');
+   zoom.setAttribute('aria-pressed',on?'true':'false');
+  });
+  g.querySelectorAll('[data-go]').forEach(function(b){
+   b.addEventListener('click',function(){
+    var id=b.getAttribute('data-go');
+    g.querySelectorAll('.g-view').forEach(function(v){
+     var show=v.getAttribute('data-view')===id;
+     v.hidden=!show;
+     v.classList.toggle('is-on',show);
+    });
+    g.querySelectorAll('[data-go]').forEach(function(x){
+     x.setAttribute('aria-selected',x===b?'true':'false');
+    });
+   });
+  });
+ }
+
  document.addEventListener('DOMContentLoaded',function(){
   cnt();
   bindMenu();
   bindFilters();
   bindProduct();
+  bindGallery();
   bindOrder();
  });
 })();

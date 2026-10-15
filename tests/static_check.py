@@ -162,6 +162,14 @@ if 'class="badge"' not in home or 'class="sep"' not in (SITE / "catalog" / "inde
     bad("cart badge or breadcrumb separator missing")
 if "<br>" not in re.search(r"<h1[^>]*>.*?</h1>", home, re.S).group(0):
     bad("home h1 has no designed line break")
+catalog = (SITE / "catalog" / "index.html").read_text(encoding="utf-8")
+if 'class="plate"' in catalog or "item-wide" in catalog:
+    bad("catalog still uses the shared plate or uneven card spans")
+linen = (SITE / "catalog" / "tc-linen-3x3" / "index.html").read_text(encoding="utf-8")
+if linen.count('data-view=') < 4:
+    bad("product gallery is missing views")
+if 'id="zoom"' not in linen:
+    bad("product gallery has no zoom control")
 
 if fail:
     print("\n".join(fail))

@@ -59,6 +59,8 @@ EVENTS = [
     ("/mapot/halls-catering/", "אולמות וקייטרינג"),
 ]
 PHOTO_EXT = {".jpg", ".jpeg", ".png", ".webp", ".avif"}
+VIDEO_EXT = {".mp4", ".webm"}
+MEDIA_EXT = PHOTO_EXT | VIDEO_EXT
 FAQ_FIX = {
     "באילו מידות יש מפות?": "מפות במידות 1.5×1.5, 1.5×3, 2.2×2.2 ו־3×3, וגם מפה עגולה.",
     "כמה זה עולה?": "לקבלת הצעת מחיר, לפי הפריטים והכמות.",
@@ -157,23 +159,36 @@ def slug_for(sku):
 
 
 def photo_files(sku, slug):
+    """Files named <SKU>* with an image or video extension. Several are allowed."""
     folder = os.path.join(R, "photos")
     stems = []
     for s in (sku, re.sub(r"[^A-Za-z0-9_-]+", "", sku), slug):
-        if s and s not in stems:
-            stems.append(s)
+        if s and s.lower() not in stems:
+            stems.append(s.lower())
     found = []
     if not os.path.isdir(folder):
         return found
     for name in sorted(os.listdir(folder)):
-        base, ext = os.path.splitext(name)
-        if ext.lower() not in PHOTO_EXT or name.startswith("."):
+        if name.startswith("."):
             continue
+        base, ext = os.path.splitext(name)
+        if ext.lower() not in MEDIA_EXT:
+            continue
+        low = base.lower()
         for stem in stems:
-            if base == stem or re.fullmatch(re.escape(stem) + r"-\d+", base):
+            if low == stem or low.startswith(stem + "-") or low.startswith(stem + "_"):
                 found.append(name)
                 break
+    def rank(name):
+        base = os.path.splitext(name)[0].lower()
+        exact = 0 if base in stems else 1
+        return (exact, name.lower())
+    found.sort(key=rank)
     return found
+
+
+def is_video(name):
+    return os.path.splitext(name)[1].lower() in VIDEO_EXT
 
 
 def public_colors(prod):
@@ -378,8 +393,9 @@ def product_ld(p):
         node["material"] = mat_name(p)
     if p.get("size"):
         node["size"] = p["size"]
-    if p["files"]:
-        node["image"] = ORIGIN + "/mapot/media/" + p["files"][0]
+    images = [name for name in p["files"] if not is_video(name)]
+    if images:
+        node["image"] = ORIGIN + "/mapot/media/" + images[0]
     if isinstance(p.get("price"), (int, float)) and not isinstance(p.get("price"), bool):
         node["offers"] = {"@type": "Offer", "price": p["price"], "priceCurrency": "ILS", "url": node["url"]}
     return node
@@ -505,25 +521,74 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
             SITEMAP.append(url)
 
 
-def plate_for(p, uid, stage=False, dyed=True, hero=False):
+def cloth_style(p, dyed=True):
+    if not dyed or p["type"] == "chair_cover":
+        return ""
+    col = accent_of(p)
+    if not col:
+        return ""
+    return f' style="--cloth:{esc(col["hex"])}"'
+
+
+def media_tag(name, alt):
+    src = f"/mapot/media/{esc(name)}"
+    if is_video(name):
+        return (
+            f'<video src="{src}" muted loop autoplay playsinline '
+            f'aria-label="{esc(alt)}"></video>' if alt else
+            f'<video src="{src}" muted loop autoplay playsinline></video>'
+        )
+    alt_attr = f' alt="{esc(alt)}"' if alt else ' alt=""'
+    return f'<img src="{src}"{alt_attr}>'
+
+
+def plate_for(p, uid, dyed=True, mode="card"):
     if p["files"]:
-        imgs = []
+        return f'<div class="media-frame">{media_tag(p["files"][0], alt_text(p))}</div>'
+    kind = kind_of(p)
+    fab = fabric_code(p) or None
+    size = p.get("size")
+    view = "hero" if mode == "hero" else plates.card_view(kind, fab, size)
+    svg = plates.render_view(kind, fab, size, uid, view)
+    cls = "scene heroimg" if mode == "hero" else "scene"
+    return f'<div class="{cls}"{cloth_style(p, dyed)} aria-hidden="true">{svg}</div>'
+
+
+def gallery_for(p, uid):
+    dyed = p["type"] != "chair_cover"
+    if p["files"]:
+        views = []
         for i, name in enumerate(p["files"]):
-            alt = alt_text(p) if i == 0 else ""
-            alt_attr = f' alt="{esc(alt)}"' if alt else ' alt=""'
-            imgs.append(f'<img src="/mapot/media/{esc(name)}"{alt_attr}>')
-        cls = "fig fig-photo fig-stage" if stage else "fig fig-photo"
-        ident = ' id="stage"' if stage else ""
-        return f'<figure class="{cls}"{ident}><div class="frame">{"".join(imgs)}</div></figure>'
-    col = accent_of(p) if dyed else None
-    return plates.render(
-        kind_of(p),
-        fabric_code(p) or None,
-        p.get("size"),
-        uid,
-        stage=stage,
-        hero=hero,
-        cloth=(col["hex"] if col else None),
+            label = f"סרטון {i+1}" if is_video(name) else f"תמונה {i+1}"
+            views.append((str(i), label, media_tag(name, alt_text(p) if i == 0 else "")))
+    else:
+        kind = kind_of(p)
+        fab = fabric_code(p) or None
+        size = p.get("size")
+        views = []
+        for key, label in plates.views_for(kind, fab, size):
+            svg = plates.render_view(kind, fab, size, uid + key, key)
+            thumb = plates.render_view(kind, fab, size, uid + key + "t", key)
+            views.append((key, label, svg, thumb))
+    if p["files"]:
+        views = [(k, lab, inner, inner) for k, lab, inner in views]
+    mains, thumbs = [], []
+    for i, (key, label, inner, thumb) in enumerate(views):
+        hidden = "" if i == 0 else " hidden"
+        on = " is-on" if i == 0 else ""
+        mains.append(f'<div class="g-view{on}" data-view="{esc(key)}"{hidden}>{inner}</div>')
+        thumbs.append(
+            f'<button type="button" role="tab" data-go="{esc(key)}" aria-selected="{"true" if i==0 else "false"}">'
+            f'<span class="mini" aria-hidden="true">{thumb}</span><span>{esc(label)}</span></button>'
+        )
+    tabs = ""
+    if len(views) > 1:
+        tabs = f'<div class="g-thumbs" role="tablist" aria-label="מבטים">{"".join(thumbs)}</div>'
+    return (
+        f'<div class="gallery" id="stage"{cloth_style(p, dyed)}>'
+        f'<div class="gallery-main">{"".join(mains)}'
+        f'<button type="button" class="zoom" id="zoom" aria-pressed="false">הגדלה</button></div>'
+        f"{tabs}</div>"
     )
 
 
@@ -531,8 +596,6 @@ def card(p, cls=""):
     cat = CAT_BY_TYPE[p["type"]][0]
     colors = " ".join(c["key"] for c in p["public_colors"])
     klass = "item" + ((" " + cls) if cls else "")
-    if p["type"] == "runner" or p.get("size") == "1.5×3":
-        klass += " item-wide"
     return (
         f'<a class="{klass}" href="/mapot/catalog/{p["slug"]}/" data-type="{cat}" '
         f'data-size="{esc(p.get("size") or "")}" data-fabric="{esc(fabric_code(p))}" data-colors="{esc(colors)}">'
@@ -656,20 +719,14 @@ def home():
             f'<span class="kind-meta">{esc(metas[slug])}</span></a>'
         )
     featured = [
-        ("TC-LINEN-3X3", "tile-a"),
-        ("TC-SATIN-22X22", "tile-b"),
-        ("TC-LINEN-ROUND", "tile-c"),
-        ("NP-SATIN", "tile-d"),
-        ("RN-STD", "tile-e"),
-        ("TC-FLORAL-*", "tile-f"),
-        ("TC-SATIN-15X3", "tile-g"),
-        ("CC-STD", "tile-h"),
+        "TC-LINEN-3X3", "TC-SATIN-22X22", "TC-LINEN-ROUND", "NP-SATIN",
+        "RN-STD", "TC-FLORAL-*", "TC-SATIN-15X3", "CC-STD",
     ]
     tiles = []
-    for sku, cls in featured:
+    for sku in featured:
         p = BY_SKU[sku]
         tiles.append(
-            f'<a class="tile {cls}" href="/mapot/catalog/{p["slug"]}/">'
+            f'<a class="tile" href="/mapot/catalog/{p["slug"]}/">'
             f'{plate_for(p, "home"+p["sku"])}'
             f'<strong>{esc(p["name_he"])}</strong>'
             f'<span class="price">{esc(price_label(p))}</span></a>'
@@ -679,16 +736,14 @@ def home():
         for i, (u, n) in enumerate(EVENTS, 1)
     )
     body = f"""
-<section class="mast">
-<div class="mast-title">
+<section class="hero-bleed">
+<div class="hero-stage">{plate_for(hero, "mast", mode="hero")}</div>
+<div class="hero-copy">
 <p class="kicker">{esc(B)} · מבית מכבסת היערה</p>
 <h1 class="display">השכרת מפות<br>לעסקים ולמוסדות</h1>
-</div>
-<div class="mast-copy">
 <p class="lede">{lede}</p>
 <div class="actions"><a class="btn" href="/mapot/catalog/">לקטלוג</a><a class="btn btn-ghost" href="{WA}">וואטסאפ {PH}</a></div>
 </div>
-<div class="mast-fig">{plate_for(hero, "mast", stage=True, hero=True)}</div>
 </section>
 <nav class="kinds" aria-label="סוגי פריטים">{''.join(kinds)}</nav>
 <div class="folio">{''.join(tiles)}</div>
@@ -718,7 +773,7 @@ def category(url):
 <h1>{esc(h1)}</h1>
 <p class="lede">{lede}</p>
 </div>
-<div class="page-plate">{plate_for(sample, "cat"+slug, stage=True, hero=True)}</div>
+<div class="page-plate">{plate_for(sample, "cat"+slug)}</div>
 </header>
 <div class="catalog-top"><p id="resultn" aria-live="polite"></p><button type="button" class="btn-ghost btn filter-open" id="openf" aria-expanded="false" aria-controls="filterpanel">סינון</button></div>
 {filter_bar(prods, lock=slug)}
@@ -752,7 +807,10 @@ def event_page(url):
         "sheva-brachot": "#8a5a32",
         "halls-catering": "#6d2428",
     }.get(slug, "#6d2428")
-    fig = plates.render("setting", "linen", None, "ev" + slug, stage=True, hero=True, cloth=event_cloth)
+    fig = (
+        f'<div class="scene" style="--cloth:{event_cloth}" aria-hidden="true">'
+        f'{plates.render_view("setting", "linen", None, "ev"+slug, "hero")}</div>'
+    )
     chips = "".join(f'<a class="btn btn-ghost" href="/mapot/{s}/">{esc(n)}</a>' for s, _t, n, _x in CATS)
     body = f"""
 <header class="page-head">
@@ -907,7 +965,7 @@ def product_page(p):
     pairs = product_faq(p)
     faq_html = "".join(f"<h2>{esc(q)}</h2><p>{esc(a)}</p>" for q, a in pairs)
     avail = '<p id="availnote" class="qty-note" aria-live="polite"></p>' if SHOW_AVAIL else ""
-    stage = plate_for(p, "stage" + p["sku"], stage=True, hero=True)
+    stage = gallery_for(p, "stage" + p["sku"])
     body = f"""
 <article class="product">
 <div class="stage-wrap">{stage}</div>
