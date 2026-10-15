@@ -48,17 +48,25 @@
     if (e.target.tagName === 'A'){ mobnav.classList.remove('open'); burger.setAttribute('aria-expanded','false'); }
   });
 
-  /* ---- lead forms -> WhatsApp ---- */
+  /* ---- lead forms -> email (POST /api/contact), WhatsApp stays as secondary button ---- */
+  var KEYS = {'שם':'name','טלפון':'phone','אימייל':'email','שם העסק':'business','סוג העסק':'type','הודעה':'message','website':'website'};
   document.querySelectorAll('form[data-lead]').forEach(function(f){
+    var loaded = Date.now(), busy = false, st = f.querySelector('.form-status'), btn = f.querySelector('button[type=submit]');
+    function say(t, ok){ if (st){ st.textContent = t; st.style.color = ok ? '#1b6b3a' : '#9a3412'; st.style.fontWeight = '600'; } }
     f.addEventListener('submit', function(e){
       e.preventDefault();
-      if (!f.reportValidity()) return;
-      var lines = ['פנייה מהאתר של מכבסת היערה', ''];
-      f.querySelectorAll('input,select,textarea').forEach(function(el){
-        var v = (el.value || '').trim();
-        if (v) lines.push(el.name + ': ' + v);
-      });
-      window.open('https://wa.me/972532535393?text=' + encodeURIComponent(lines.join('\n')), '_blank', 'noopener');
+      if (busy || !f.reportValidity()) return;
+      var body = {t: loaded};
+      f.querySelectorAll('input,select,textarea').forEach(function(el){ if (KEYS[el.name]) body[KEYS[el.name]] = (el.value || '').trim(); });
+      busy = true; if (btn){ btn.disabled = true; } say('שולחים את הפנייה…', true);
+      fetch('/api/contact', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)})
+        .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok && j.ok, j:j}; }); })
+        .then(function(x){
+          if (x.ok){ say('תודה! הפנייה התקבלה ונחזור אליכם בהקדם.', true); f.reset(); loaded = Date.now(); }
+          else { say((x.j && x.j.error) || 'השליחה לא הושלמה. אפשר לפנות אלינו בוואטסאפ או בטלפון 053-2535393.', false); }
+        })
+        .catch(function(){ say('השליחה לא הושלמה. אפשר לפנות אלינו בוואטסאפ או בטלפון 053-2535393.', false); })
+        .then(function(){ busy = false; if (btn){ btn.disabled = false; } });
     });
   });
 

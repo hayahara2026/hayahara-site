@@ -30,7 +30,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&amp;family=Rubik:wght@500;600;700;800&amp;display=swap">
-<link rel="stylesheet" href="assets/css/site.css">
+<link rel="stylesheet" href="assets/css/site.css?v=20261015">
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -627,11 +627,18 @@
             </div>
           </div>
           <div class="fld" style="margin-top:13px">
+            <label for="c-email">אימייל (לא חובה)</label>
+            <input id="c-email" name="אימייל" type="email" autocomplete="email" inputmode="email" dir="ltr">
+          </div>
+          <div class="fld" style="margin-top:13px">
             <label for="c-msg">במה נוכל לעזור?</label>
             <textarea id="c-msg" name="הודעה" rows="4" placeholder="לדוגמה: מלון בן 60 חדרים, מצעים ומגבות, פעמיים בשבוע"></textarea>
           </div>
+          <div class="hp" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);opacity:0;pointer-events:none;white-space:nowrap"><label>אל תמלאו שדה זה <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
           <button class="btn btn-p btn-full" type="submit" style="margin-top:16px">שליחת הפנייה</button>
-          <p class="note" style="margin-top:10px">הפנייה נפתחת אצלכם בוואטסאפ עם הפרטים שמילאתם, ונשלחת אלינו בלחיצה. מפה ופרטים נוספים ב<a href="contact.html">עמוד צור קשר</a>.</p>
+          <p class="note form-status" role="status" aria-live="polite" style="margin-top:10px"></p>
+          <a class="btn btn-full wa-alt" href="https://wa.me/972532535393" target="_blank" rel="noopener" style="margin-top:8px;background:#fff;color:#0b2c54;border:1px solid #c9d6e6">או שליחת הודעה בוואטסאפ</a>
+          <p class="note" style="margin-top:10px">הפנייה מגיעה אלינו במייל ואנחנו חוזרים אליכם בהקדם. בשליחת הטופס אתם מאשרים את <a href="privacy.html">מדיניות הפרטיות</a>. מפה ופרטים נוספים ב<a href="contact.html">עמוד צור קשר</a>.</p>
         </form>
       </div>
     </div>
@@ -751,6 +758,6 @@
   </div>
 </div>
 
-<script src="assets/js/site.js"></script>
+<script src="assets/js/site.js?v=20261015"></script>
 </body>
 </html>

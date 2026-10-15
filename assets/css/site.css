@@ -1,5 +1,5 @@
 /* paths are relative to assets/css/ */
-:root{--mark:url("../logo-mark.png");--mark-lg:url("../logo-mark-lg.webp");--wm-d:url("../logo-wordmark.png");--wm-l:url("../logo-wordmark-light.png");--ph-hotel:url("../hotels.jpg");--ph-inst:url("../institutions.jpg");--ph-cater:url("../catering.jpg");--ph-biz:url("../businesses.jpg");--ph-about:url("../about.jpg")}
+:root{--mark:url("../logo-mark.png");--mark-lg:url("../logo-mark-lg-clean.webp");--wm-d:url("../logo-wordmark.png");--wm-l:url("../logo-wordmark-light.png");--ph-hotel:url("../hotels.jpg");--ph-inst:url("../institutions.jpg");--ph-cater:url("../catering.jpg");--ph-biz:url("../businesses.jpg");--ph-about:url("../about.jpg")}
 :root{
   --navy:#0E3462; --navy-2:#0A2748; --blue:#1B6FB5; --blue-d:#155A94; --sky:#E8F1F9;
   --page:#FFFFFF; --alt:#F4F7FA; --card:#FFFFFF;
