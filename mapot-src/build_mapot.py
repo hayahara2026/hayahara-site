@@ -436,6 +436,20 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
     for u, n in NAV:
         cur = ' aria-current="page"' if u == url or (u != "/mapot/catalog/" and url.startswith(u)) else ""
         nav.append(f'<a href="{u}"{cur}>{esc(n)}</a>')
+    nav_html = (
+        f'<nav class="site-nav" id="sitenav" aria-label="ראשי">'
+        f'<button type="button" class="nav-scrim" id="navscrim" tabindex="-1" aria-hidden="true"></button>'
+        f'<div class="nav-sheet">'
+        f'<div class="nav-head">'
+        f'<a class="nav-brand" id="navbrand" href="/mapot/"><b>{esc(B)}</b><small>מבית מכבסת היערה</small></a>'
+        f'<button type="button" class="nav-close" id="navclose" aria-label="סגירת התפריט">'
+        f'<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">'
+        f'<path d="M5 5 L19 19 M19 5 L5 19" fill="none" stroke="currentColor" stroke-width="2"/>'
+        f'</svg><span>סגירה</span></button>'
+        f'</div>'
+        f'<div class="nav-links">{"".join(nav)}</div>'
+        f'</div></nav>'
+    )
     avail = "1" if SHOW_AVAIL else "0"
     foot_nav = "".join(f'<a href="{u}">{esc(n)}</a>' for u, n in NAV + EVENTS[:4])
     doc = f"""<!DOCTYPE html>
@@ -465,7 +479,7 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
 <a class="skip" href="#content">לתוכן</a>
 <header class="hdr">
 <a class="brand" href="/mapot/"><b>{esc(B)}</b><small>מבית מכבסת היערה</small></a>
-<nav class="site-nav" id="sitenav" aria-label="ראשי">{''.join(nav)}</nav>
+{nav_html}
 <div class="tools">
 <a class="cartlink" href="/mapot/order/" aria-label="סל ההזמנה"><span class="cartlabel">הזמנה</span><span id="cartn" class="badge" aria-live="polite">0</span></a>
 <button type="button" class="nav-toggle" id="navtoggle" aria-expanded="false" aria-controls="sitenav">תפריט</button>

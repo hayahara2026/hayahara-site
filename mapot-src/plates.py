@@ -89,27 +89,35 @@ def _floral_pattern(uid):
 
 def square(uid, fabric, w=800, h=1000):
     uid = uid_of(uid)
-    cloth = (
-        "M70 250 C 160 150, 340 190, 470 140 C 620 90, 730 180, 760 250 "
-        "C 790 420, 740 560, 780 760 C 640 820, 470 740, 300 810 "
-        "C 160 870, 40 760, 20 620 C 0 430, 40 340, 70 250 Z"
-    )
+    # Rectangular cloth on a table, from a corner: top, front drop, side drop, hem.
+    cloth = "M240 270 L630 220 L700 410 L748 830 L188 910 L112 790 L156 480 Z"
+    top = "M240 270 L630 220 L700 410 L268 462 Z"
+    nap = "M318 300 L452 274 L478 392 L338 424 Z"
     printed = ""
     if fabric == "floral":
         printed = _floral_pattern(uid) + f'<path d="{cloth}" fill="url(#fp{uid})"/>'
     body = (
         f"{_defs(uid)}"
         f'<clipPath id="cp{uid}"><path d="{cloth}"/></clipPath>'
-        f'<rect width="{w}" height="{h}" fill="#ddd2c2"/>'
-        f'<ellipse cx="400" cy="860" rx="300" ry="46" fill="{INK}" opacity="0.16" filter="url(#sh{uid})"/>'
-        f'<path d="{cloth}" {_fill()} filter="url(#tx{uid})"/>'
-        f'<path d="M120 300 C 220 420, 200 620, 90 760" fill="none" stroke="#140e0a" stroke-width="28" stroke-linecap="round" opacity="0.1"/>'
-        f'<path d="M250 240 C 340 380, 300 640, 210 800" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" opacity="0.16"/>'
-        f'<path d="M480 180 C 560 360, 520 600, 610 780" fill="none" stroke="#140e0a" stroke-width="18" stroke-linecap="round" opacity="0.12"/>'
-        f'<path d="{cloth}" fill="url(#lg{uid})"/>'
-        f'<path d="{cloth}" fill="url(#dk{uid})"/>'
+        f'<rect width="{w}" height="{h}" fill="#e6dccb"/>'
+        f'<ellipse cx="430" cy="900" rx="270" ry="26" fill="{INK}" opacity="0.14" filter="url(#sh{uid})"/>'
+        f'<path d="{cloth}" {_fill()}/>'
+        f'<path d="{cloth}" {_fill()} filter="url(#tx{uid})" opacity="0.45"/>'
+        f'<g clip-path="url(#cp{uid})" fill="none" stroke-linecap="round">'
+        f'<path d="M250 470 C230 620, 270 740, 220 890" stroke="#140e0a" stroke-width="14" opacity="0.16"/>'
+        f'<path d="M400 445 C420 610, 370 740, 420 900" stroke="#fff" stroke-width="12" opacity="0.34"/>'
+        f'<path d="M540 425 C510 590, 570 720, 530 850" stroke="#140e0a" stroke-width="11" opacity="0.14"/>'
+        f'<path d="M190 500 C160 640, 180 730, 145 800" stroke="#140e0a" stroke-width="12" opacity="0.14"/>'
+        f"</g>"
+        f'<path d="{cloth}" fill="url(#dk{uid})" opacity="0.22"/>'
+        f'<path d="{top}" fill="#fff" opacity="0.18"/>'
+        f'<path d="M156 480 L268 462 L700 410" fill="none" stroke="#140e0a" stroke-width="8" opacity="0.35"/>'
+        f'<path d="M240 270 L268 462" fill="none" stroke="#140e0a" stroke-width="6" opacity="0.22"/>'
+        f'<path d="M112 790 L188 910 L748 830" fill="none" stroke="#140e0a" stroke-width="7" opacity="0.28"/>'
+        f'<path d="{top}" fill="none" stroke="#fff" stroke-width="3" opacity="0.5"/>'
         f"{printed}"
-        f'<path d="M760 250 C 790 420, 740 560, 780 760 C 640 820, 470 740, 300 810 C 160 870, 40 760, 20 620" fill="none" stroke="#140e0a" stroke-width="10" opacity="0.15"/>'
+        f'<path d="{nap}" fill="#f7f3ea" stroke="#1c1916" stroke-width="5"/>'
+        f'<path d="M338 348 L468 322" fill="none" stroke="#1c1916" stroke-width="5" opacity="0.2"/>'
         f"{_sheen(uid, cloth)}"
     )
     return _svg(body, w, h, fabric)

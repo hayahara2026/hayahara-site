@@ -71,6 +71,28 @@ async function desktop() {
   if (contrast.a < 1 || contrast.h1 < 4.5 || contrast.lede < 4.5) {
     throw new Error("hero contrast " + JSON.stringify(contrast));
   }
+  const heroEdge = await page.evaluate(() => {
+    const img = document.querySelector(".hero-stage img").getBoundingClientRect();
+    return {
+      l: Math.round(img.left),
+      r: Math.round(window.innerWidth - img.right),
+      w: Math.round(img.width),
+      vw: window.innerWidth,
+    };
+  });
+  if (heroEdge.l > 2 || heroEdge.r > 2 || heroEdge.w < heroEdge.vw - 4) {
+    throw new Error("desktop hero gap " + JSON.stringify(heroEdge));
+  }
+  const deskNav = await page.evaluate(() => ({
+    toggle: getComputedStyle(document.querySelector(".nav-toggle")).display,
+    nav: getComputedStyle(document.querySelector(".site-nav")).display,
+    head: getComputedStyle(document.querySelector(".nav-head")).display,
+    closeW: document.querySelector(".nav-close").getBoundingClientRect().width,
+    linkW: document.querySelector(".nav-links a").getBoundingClientRect().width,
+  }));
+  if (deskNav.toggle !== "none" || deskNav.nav !== "flex" || deskNav.head !== "none" || deskNav.closeW > 0 || deskNav.linkW < 20) {
+    throw new Error("desktop nav " + JSON.stringify(deskNav));
+  }
   const badge = await page.$eval(".cartlink", (el) => {
     const label = el.querySelector(".cartlabel").getBoundingClientRect();
     const mark = el.querySelector(".badge").getBoundingClientRect();
@@ -243,10 +265,41 @@ async function headerFit(width, rootPx) {
   await page.click("#navtoggle");
   const open = await page.evaluate(() => {
     const nav = document.querySelector(".site-nav").getBoundingClientRect();
-    return { w: nav.width, h: nav.height, display: getComputedStyle(document.querySelector(".site-nav")).display };
+    const sheet = document.querySelector(".nav-sheet").getBoundingClientRect();
+    const close = document.querySelector(".nav-close").getBoundingClientRect();
+    const brand = document.querySelector("#navbrand").innerText;
+    return {
+      w: nav.width,
+      h: nav.height,
+      display: getComputedStyle(document.querySelector(".site-nav")).display,
+      role: document.querySelector(".site-nav").getAttribute("role"),
+      modal: document.querySelector(".site-nav").getAttribute("aria-modal"),
+      focus: document.activeElement && document.activeElement.id,
+      brand,
+      closeW: close.width,
+      closeH: close.height,
+      closeText: document.querySelector(".nav-close").innerText,
+      sheetL: sheet.left,
+      sheetR: window.innerWidth - sheet.right,
+      gap: Math.round(Math.max(sheet.left, window.innerWidth - sheet.right)),
+    };
   });
   if (open.display !== "flex" || open.w < m.vw - 2 || open.h < 700) throw new Error("menu " + tag + " " + JSON.stringify(open));
+  if (open.role !== "dialog" || open.modal !== "true" || open.focus !== "navclose") throw new Error("menu focus " + tag + " " + JSON.stringify(open));
+  if (!open.brand.includes("היערה אירועים") || open.closeW < 44 || open.closeH < 44 || !open.closeText.includes("סגירה")) {
+    throw new Error("menu chrome " + tag + " " + JSON.stringify(open));
+  }
+  if (open.gap < 40) throw new Error("menu has no outside " + tag + " " + JSON.stringify(open));
+  await page.keyboard.press("Escape");
+  const escaped = await page.evaluate(() => ({
+    open: document.querySelector(".site-nav").classList.contains("open"),
+    focus: document.activeElement && document.activeElement.id,
+  }));
+  if (escaped.open || escaped.focus !== "navtoggle") throw new Error("escape " + tag + " " + JSON.stringify(escaped));
   await page.click("#navtoggle");
+  await page.mouse.click(8, 280);
+  const outside = await page.evaluate(() => document.querySelector(".site-nav").classList.contains("open"));
+  if (outside) throw new Error("tap outside left the menu open " + tag);
 }
 
 async function mobile() {

@@ -195,6 +195,12 @@ if 'rx="246"' not in round_html or 'r="300"' in round_html:
 floral_html = (SITE / "catalog" / "tc-floral" / "index.html").read_text(encoding="utf-8")
 if "<pattern" not in floral_html:
     bad("floral cloth is missing a print pattern")
+if 'id="navclose"' not in home or 'id="navbrand"' not in home or 'class="nav-scrim"' not in home:
+    bad("mobile menu is missing a close control or wordmark")
+if "סגירה" not in home:
+    bad("mobile menu close control has no visible label")
+if "M70 250" in catalog or "L748 830" not in catalog:
+    bad("square cloth still reads as a blotch")
 
 photos_present = bool(media_slot.list_files(str(ROOT / "mapot-src" / "photos")))
 range_present = bool(media_slot.range_files(str(ROOT / "mapot-src" / "range")))

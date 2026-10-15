@@ -14,12 +14,63 @@
  function bindMenu(){
   var toggle=document.getElementById('navtoggle'),nav=document.getElementById('sitenav');
   if(!toggle||!nav)return;
+  var closeBtn=document.getElementById('navclose');
+  var scrim=document.getElementById('navscrim');
+  var wide=window.matchMedia('(min-width:1100px)');
+  function veil(on){
+   [document.querySelector('.skip'),document.querySelector('.hdr .brand'),document.querySelector('.tools'),document.getElementById('content'),document.querySelector('.foot'),document.querySelector('.dock')].forEach(function(el){
+    if(!el)return;
+    if(on)el.setAttribute('inert','');
+    else el.removeAttribute('inert');
+   });
+  }
+  function focusables(){
+   return Array.prototype.filter.call(nav.querySelectorAll('a[href],button:not([disabled])'),function(el){
+    return el.tabIndex>=0&&el.getClientRects().length>0;
+   });
+  }
+  function open(){
+   if(wide.matches||nav.classList.contains('open'))return;
+   nav.classList.add('open');
+   nav.setAttribute('role','dialog');
+   nav.setAttribute('aria-modal','true');
+   toggle.setAttribute('aria-expanded','true');
+   document.body.classList.add('nav-open');
+   veil(true);
+   if(closeBtn)closeBtn.focus();
+  }
+  function close(){
+   if(!nav.classList.contains('open'))return;
+   nav.classList.remove('open');
+   nav.removeAttribute('role');
+   nav.removeAttribute('aria-modal');
+   toggle.setAttribute('aria-expanded','false');
+   document.body.classList.remove('nav-open');
+   veil(false);
+   if(!wide.matches)toggle.focus();
+  }
   toggle.addEventListener('click',function(){
-   var open=nav.classList.toggle('open');
-   toggle.setAttribute('aria-expanded',open?'true':'false');
-   toggle.textContent=open?'סגירה':'תפריט';
-   document.body.classList.toggle('nav-open',open);
+   if(nav.classList.contains('open'))close();
+   else open();
   });
+  if(closeBtn)closeBtn.addEventListener('click',close);
+  if(scrim)scrim.addEventListener('click',close);
+  nav.addEventListener('click',function(e){
+   if(e.target.closest('.nav-links a, .nav-brand'))close();
+  });
+  document.addEventListener('keydown',function(e){
+   if(!nav.classList.contains('open'))return;
+   if(e.key==='Escape'){ e.preventDefault(); close(); return; }
+   if(e.key!=='Tab')return;
+   var items=focusables();
+   if(!items.length)return;
+   var first=items[0],last=items[items.length-1];
+   if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+   else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); }
+  });
+  function onWide(){ if(wide.matches)close(); }
+  if(wide.addEventListener)wide.addEventListener('change',onWide);
+  else if(wide.addListener)wide.addListener(onWide);
  }
 
  function bindFilters(){
