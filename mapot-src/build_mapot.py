@@ -3,6 +3,7 @@
 # Self-contained: no path outside this repo.
 import html as H
 import json, os, re, shutil, sys
+import media_slot
 import plates
 
 R = os.path.dirname(os.path.abspath(__file__))
@@ -25,7 +26,6 @@ if not os.path.isfile(copy_path):
 md = open(copy_path, encoding="utf-8").read().replace("{BRAND}", B)
 
 OUT = os.path.join(ROOT, "mapot")
-shutil.rmtree(OUT, ignore_errors=True)
 
 DATA = json.load(open(os.path.join(R, "data", "products.json"), encoding="utf-8"))
 COLORS = {c["key"]: c for c in DATA["colors"]}
@@ -58,9 +58,6 @@ EVENTS = [
     ("/mapot/sheva-brachot/", "שבע ברכות"),
     ("/mapot/halls-catering/", "אולמות וקייטרינג"),
 ]
-PHOTO_EXT = {".jpg", ".jpeg", ".png", ".webp", ".avif"}
-VIDEO_EXT = {".mp4", ".webm"}
-MEDIA_EXT = PHOTO_EXT | VIDEO_EXT
 FAQ_FIX = {
     "באילו מידות יש מפות?": "מפות במידות 1.5×1.5, 1.5×3, 2.2×2.2 ו־3×3, וגם מפה עגולה.",
     "כמה זה עולה?": "לקבלת הצעת מחיר, לפי הפריטים והכמות.",
@@ -159,36 +156,12 @@ def slug_for(sku):
 
 
 def photo_files(sku, slug):
-    """Files named <SKU>* with an image or video extension. Several are allowed."""
-    folder = os.path.join(R, "photos")
-    stems = []
-    for s in (sku, re.sub(r"[^A-Za-z0-9_-]+", "", sku), slug):
-        if s and s.lower() not in stems:
-            stems.append(s.lower())
-    found = []
-    if not os.path.isdir(folder):
-        return found
-    for name in sorted(os.listdir(folder)):
-        if name.startswith("."):
-            continue
-        base, ext = os.path.splitext(name)
-        if ext.lower() not in MEDIA_EXT:
-            continue
-        low = base.lower()
-        for stem in stems:
-            if low == stem or low.startswith(stem + "-") or low.startswith(stem + "_"):
-                found.append(name)
-                break
-    def rank(name):
-        base = os.path.splitext(name)[0].lower()
-        exact = 0 if base in stems else 1
-        return (exact, name.lower())
-    found.sort(key=rank)
-    return found
+    """Dressed-table or single-product files in photos/. Top of the folder only."""
+    return media_slot.product_files(os.path.join(R, "photos"), sku, slug)
 
 
 def is_video(name):
-    return os.path.splitext(name)[1].lower() in VIDEO_EXT
+    return media_slot.is_video(name)
 
 
 def public_colors(prod):
@@ -303,6 +276,7 @@ def load_products():
 PRODUCTS = load_products()
 BY_SLUG = {p["slug"]: p for p in PRODUCTS}
 BY_SKU = {p["sku"]: p for p in PRODUCTS}
+RANGE_FILES = media_slot.range_files(os.path.join(R, "range"))
 
 # copy pages
 PAGES = {}
@@ -530,21 +504,19 @@ def cloth_style(p, dyed=True):
     return f' style="--cloth:{esc(col["hex"])}"'
 
 
-def media_tag(name, alt):
+def media_tag(name, alt, autoplay=True):
     src = f"/mapot/media/{esc(name)}"
     if is_video(name):
-        return (
-            f'<video src="{src}" muted loop autoplay playsinline '
-            f'aria-label="{esc(alt)}"></video>' if alt else
-            f'<video src="{src}" muted loop autoplay playsinline></video>'
-        )
+        play = " muted loop playsinline" + (" autoplay" if autoplay else "")
+        label = f' aria-label="{esc(alt)}"' if alt else ""
+        return f'<video src="{src}"{play}{label}></video>'
     alt_attr = f' alt="{esc(alt)}"' if alt else ' alt=""'
     return f'<img src="{src}"{alt_attr}>'
 
 
 def plate_for(p, uid, dyed=True, mode="card"):
-    if p["files"]:
-        return f'<div class="media-frame">{media_tag(p["files"][0], alt_text(p))}</div>'
+    # Cards, the hero, category plates, and related cards stay drawn scenes,
+    # even when a product file exists. Warehouse shots never reach this path.
     kind = kind_of(p)
     fab = fabric_code(p) or None
     size = p.get("size")
@@ -556,11 +528,14 @@ def plate_for(p, uid, dyed=True, mode="card"):
 
 def gallery_for(p, uid):
     dyed = p["type"] != "chair_cover"
-    if p["files"]:
+    files = media_slot.files_for_surface("gallery", p["files"])
+    if files:
         views = []
-        for i, name in enumerate(p["files"]):
+        for i, name in enumerate(files):
             label = f"סרטון {i+1}" if is_video(name) else f"תמונה {i+1}"
-            views.append((str(i), label, media_tag(name, alt_text(p) if i == 0 else "")))
+            main = media_tag(name, alt_text(p) if i == 0 else "", autoplay=(i == 0))
+            thumb = media_tag(name, "", autoplay=False)
+            views.append((str(i), label, main, thumb))
     else:
         kind = kind_of(p)
         fab = fabric_code(p) or None
@@ -570,8 +545,6 @@ def gallery_for(p, uid):
             svg = plates.render_view(kind, fab, size, uid + key, key)
             thumb = plates.render_view(kind, fab, size, uid + key + "t", key)
             views.append((key, label, svg, thumb))
-    if p["files"]:
-        views = [(k, lab, inner, inner) for k, lab, inner in views]
     mains, thumbs = [], []
     for i, (key, label, inner, thumb) in enumerate(views):
         hidden = "" if i == 0 else " hidden"
@@ -700,6 +673,32 @@ def first_paragraph_and_rest(url):
     return split_head(html)
 
 
+def range_section(files=None):
+    """Home shelf rail. Omitted when mapot-src/range/ has no media."""
+    files = RANGE_FILES if files is None else files
+    if not files:
+        return ""
+    bits = []
+    for name in files:
+        src = f"/mapot/media/range/{esc(name)}"
+        if is_video(name):
+            inner = (
+                f'<video src="{src}" muted loop playsinline controls preload="metadata" '
+                f'aria-label="סרטון מהמחסן"></video>'
+            )
+        else:
+            inner = f'<img src="{src}" alt="מפות ארוזות במחסן">'
+        bits.append(f'<figure class="range-item">{inner}</figure>')
+    return (
+        '<section class="range" aria-labelledby="range-h">'
+        '<p class="kicker">המחסן</p>'
+        '<h2 id="range-h">צבעים על המדף</h2>'
+        "<p>במחסן המפות ארוזות בשקיות על המדף, ועל המדף שלטי מידה של 3×3 ושל 1.5×3.</p>"
+        f'<div class="range-rail">{"".join(bits)}</div>'
+        "</section>"
+    )
+
+
 def home():
     pg = PAGES["/mapot/"]
     lede, rest = first_paragraph_and_rest("/mapot/")
@@ -746,7 +745,7 @@ def home():
 </div>
 </section>
 <nav class="kinds" aria-label="סוגי פריטים">{''.join(kinds)}</nav>
-<div class="folio">{''.join(tiles)}</div>
+<div class="folio">{''.join(tiles)}</div>{(chr(10) + range_section()) if RANGE_FILES else ""}
 <section class="essay">
 <div class="essay-body prose">{rest}</div>
 <div class="pull-col"><h2>נקי ומוכן לפריסה</h2><blockquote class="pull"><p>כל הזמנה מגיעה נקייה, והמפות מגיעות מגוהצות, מוכנות לפריסה.</p></blockquote></div>
@@ -1079,6 +1078,11 @@ def write_assets():
                 continue
             seen.add(name)
             shutil.copy(os.path.join(R, "photos", name), os.path.join(OUT, "media", name))
+    if RANGE_FILES:
+        dest = os.path.join(OUT, "media", "range")
+        os.makedirs(dest, exist_ok=True)
+        for name in RANGE_FILES:
+            shutil.copy(os.path.join(R, "range", name), os.path.join(dest, name))
 
 
 def write_meta():
@@ -1160,6 +1164,7 @@ def forbid():
 
 
 def main():
+    shutil.rmtree(OUT, ignore_errors=True)
     home()
     for slug, _t, _n, _s in CATS:
         category(f"/mapot/{slug}/")

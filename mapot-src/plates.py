@@ -1,5 +1,6 @@
 # Code-rendered cloth. Each product type is its own composition.
-# A file in mapot-src/photos/ replaces these scenes. Not a photograph.
+# Cards, the home hero, and category plates always use these scenes.
+# A future file in mapot-src/photos/ is for the product-page gallery only.
 import html as H
 import re
 

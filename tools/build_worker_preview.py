@@ -1,5 +1,5 @@
 import json,mimetypes,os,base64,subprocess
-mimetypes.add_type('text/plain','.txt');mimetypes.add_type('application/manifest+json','.webmanifest');mimetypes.add_type('image/webp','.webp');mimetypes.add_type('image/svg+xml','.svg');mimetypes.add_type('font/woff2','.woff2');mimetypes.add_type('video/mp4','.mp4');mimetypes.add_type('video/webm','.webm')
+mimetypes.add_type('text/plain','.txt');mimetypes.add_type('application/manifest+json','.webmanifest');mimetypes.add_type('image/webp','.webp');mimetypes.add_type('image/svg+xml','.svg');mimetypes.add_type('font/woff2','.woff2');mimetypes.add_type('video/mp4','.mp4');mimetypes.add_type('video/webm','.webm');mimetypes.add_type('image/avif','.avif')
 root='hayahara-site';F={}
 for r,ds,fs in os.walk(root):
   ds[:]=[d for d in ds if d!='.git']

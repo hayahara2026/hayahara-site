@@ -4,6 +4,8 @@ import json, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "mapot-src"))
+import media_slot  # noqa: E402
 SITE = ROOT / "mapot"
 SRC = json.loads((ROOT / "mapot-src" / "data" / "products.json").read_text(encoding="utf-8"))
 CFG = json.loads((ROOT / "mapot-src" / "config.json").read_text(encoding="utf-8"))
@@ -170,6 +172,25 @@ if linen.count('data-view=') < 4:
     bad("product gallery is missing views")
 if 'id="zoom"' not in linen:
     bad("product gallery has no zoom control")
+
+photos_present = bool(media_slot.list_files(str(ROOT / "mapot-src" / "photos")))
+range_present = bool(media_slot.range_files(str(ROOT / "mapot-src" / "range")))
+if not range_present:
+    for path, text in public_text:
+        if "/mapot/media/range/" in text or 'class="range"' in text:
+            bad(f"empty warehouse slot rendered in {path.relative_to(ROOT)}")
+if not photos_present and not range_present:
+    for path in htmls:
+        text = path.read_text(encoding="utf-8")
+        if "<img" in text or "<video" in text:
+            bad(f"media tag while photo slots are empty: {path.relative_to(ROOT)}")
+for path in htmls:
+    text = path.read_text(encoding="utf-8")
+    rel = path.relative_to(ROOT)
+    if 'class="media-frame"' in text:
+        bad(f"photo frame on a card or hero: {rel}")
+    if re.search(r'class="(?:item|tile|hero-stage|page-plate)"[^>]*>\s*<(?:img|video)\b', text):
+        bad(f"photo or video on a card or hero: {rel}")
 
 if fail:
     print("\n".join(fail))
