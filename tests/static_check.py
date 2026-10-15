@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "mapot-src"))
+import atmosphere  # noqa: E402
 import media_slot  # noqa: E402
 SITE = ROOT / "mapot"
 SRC = json.loads((ROOT / "mapot-src" / "data" / "products.json").read_text(encoding="utf-8"))
@@ -82,7 +83,15 @@ for path in htmls:
                 for name in COLOR_NAMES:
                     if name in json.dumps(node, ensure_ascii=False):
                         bad(f"placeholder color name in product schema {rel}: {name}")
+    urls = []
     for href in re.findall(r'(?:href|src)="(/mapot/[^"]*)"', text):
+        urls.append(href)
+    for srcset in re.findall(r'srcset="([^"]*)"', text):
+        for part in srcset.split(","):
+            url = part.strip().split()[0] if part.strip() else ""
+            if url.startswith("/mapot/"):
+                urls.append(url)
+    for href in urls:
         target = href.split("#")[0].split("?")[0]
         if target.endswith("/"):
             fp = SITE / target[len("/mapot/"):] / "index.html"
@@ -175,6 +184,7 @@ if 'id="zoom"' not in linen:
 
 photos_present = bool(media_slot.list_files(str(ROOT / "mapot-src" / "photos")))
 range_present = bool(media_slot.range_files(str(ROOT / "mapot-src" / "range")))
+atmo_ready = atmosphere.plan(str(ROOT / "mapot-src" / "atmosphere"))
 if not range_present:
     for path, text in public_text:
         if "/mapot/media/range/" in text or 'class="range"' in text:
@@ -182,15 +192,52 @@ if not range_present:
 if not photos_present and not range_present:
     for path in htmls:
         text = path.read_text(encoding="utf-8")
-        if "<img" in text or "<video" in text:
-            bad(f"media tag while photo slots are empty: {path.relative_to(ROOT)}")
+        if "<video" in text:
+            bad(f"video while the product and warehouse slots are empty: {path.relative_to(ROOT)}")
+        for tag in re.findall(r"<img\b[^>]*>", text):
+            if "/mapot/media/atmosphere/" not in tag:
+                bad(f"non-atmosphere image while product slots are empty: {path.relative_to(ROOT)}")
 for path in htmls:
     text = path.read_text(encoding="utf-8")
     rel = path.relative_to(ROOT)
     if 'class="media-frame"' in text:
-        bad(f"photo frame on a card or hero: {rel}")
-    if re.search(r'class="(?:item|tile|hero-stage|page-plate)"[^>]*>\s*<(?:img|video)\b', text):
-        bad(f"photo or video on a card or hero: {rel}")
+        bad(f"photo frame on a card: {rel}")
+    for card in re.findall(r'class="(?:item|tile)"[^>]*>.*?</a>', text, re.S):
+        if "<img" in card or "<video" in card or "/mapot/media/atmosphere/" in card:
+            bad(f"atmosphere or product photo on a card: {rel}")
+    for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', text):
+        try:
+            data = json.loads(block)
+        except json.JSONDecodeError:
+            continue
+        for node in data.get("@graph", []):
+            if node.get("@type") == "Product" and "atmosphere" in json.dumps(node):
+                bad(f"atmosphere photo filed as a product image: {rel}")
+if "hero" in atmo_ready:
+    if "hero-stage has-photo" not in home or "image/avif" not in home or "image/webp" not in home:
+        bad("home hero is missing the responsive atmosphere picture")
+    if atmo_ready["hero"]["alt"] not in home:
+        bad("home hero alt text missing")
+    if "hero-narrow-" not in home or "hero-wide-" not in home:
+        bad("home hero is missing the mobile or desktop crop")
+else:
+    if "/mapot/media/atmosphere/hero-" in home:
+        bad("hero picture rendered without a source file")
+for slug, slot in atmosphere.HEADERS.items():
+    page = (SITE / slug / "index.html").read_text(encoding="utf-8")
+    if slot in atmo_ready:
+        if "page-plate has-photo" not in page or f"{slot}-narrow-" not in page:
+            bad(f"{slug} header did not receive {slot}")
+    elif "/mapot/media/atmosphere/" in page:
+        bad(f"{slug} shows an atmosphere photo that is not on disk")
+chair_html = (SITE / "chair-covers" / "index.html").read_text(encoding="utf-8")
+if "/mapot/media/atmosphere/" in chair_html:
+    bad("chair-cover category uses an atmosphere photo")
+product_html = (SITE / "catalog" / "tc-linen-3x3" / "index.html").read_text(encoding="utf-8")
+if "/mapot/media/atmosphere/" in product_html:
+    bad("product page is using an atmosphere photo")
+if not photos_present and "<img" in product_html:
+    bad("product page is using a photo while the product slot is empty")
 
 if fail:
     print("\n".join(fail))

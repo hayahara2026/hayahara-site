@@ -117,10 +117,36 @@ p{margin:0 0 .9em}
 .hero-bleed{position:relative;margin-inline:calc(var(--pad) * -1)}
 .hero-stage .scene{display:block}
 .hero-stage svg{width:100%;height:auto;display:block}
-.hero-copy{padding:22px 0 8px}
+.hero-stage.has-photo img{width:100%;height:auto;aspect-ratio:2/3;object-fit:cover}
+@media(max-width:699px){
+ .hero-bleed.has-photo{display:grid}
+ .hero-bleed.has-photo .hero-stage{grid-area:1/1}
+ .hero-bleed.has-photo .hero-copy{display:contents}
+ .hero-bleed.has-photo .hero-panel{
+  display:block;grid-area:1/1;align-self:end;z-index:2;
+  padding:16px var(--pad) 18px;
+  background:#f3efe6;color:#1c1916;
+  box-shadow:0 -10px 28px rgba(28,25,22,.14);
+ }
+ .hero-bleed.has-photo .lede{grid-area:2/1;padding:16px var(--pad) 0;max-width:none}
+}
+.hero-copy{display:flex;flex-direction:column;padding:22px 0 8px;color:var(--ink)}
+.hero-panel{display:contents}
+.hero-copy .kicker{order:1}
+.hero-copy h1{order:2}
+.hero-copy .lede{order:3}
+.hero-copy .actions{order:4}
 .hero-copy h1{max-width:none;font-size:clamp(2.15rem,4vw,3.35rem);line-height:1.02;margin-bottom:.25em}
 .hero-copy h1 br{display:block}
 .hero-copy .lede{max-width:36rem}
+.atmo-band{margin:8px 0 48px}
+.atmo-band h2{margin-top:0}
+.atmo-band > p{max-width:40rem}
+.atmo-rail{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}
+.atmo-rail figure{flex:0 0 min(78vw,420px);margin:0;scroll-snap-align:start}
+.atmo-rail img{width:100%;aspect-ratio:16/9;object-fit:cover}
+.atmo-rail figcaption{margin-top:8px;font-size:.92rem}
+.page-plate.has-photo img{width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
 .fig{margin:0}
  .frame{
  background:#e3dac8;
@@ -355,6 +381,13 @@ table.sizes th{font-size:.78rem;letter-spacing:.08em;color:var(--muted)}
  .product .buy .btn#add{display:none}
 }
 @media(min-width:700px){
+ .hero-stage.has-photo img{aspect-ratio:3/2}
+ .hero-bleed.has-photo .hero-copy{display:flex;flex-direction:column}
+ .hero-bleed.has-photo .hero-panel{display:contents}
+ .hero-bleed.has-photo .kicker{order:1}
+ .hero-bleed.has-photo h1{order:2}
+ .hero-bleed.has-photo .lede{order:3}
+ .hero-bleed.has-photo .actions{order:4}
  .catalog-grid,.folio{grid-template-columns:1fr 1fr}
  .related-grid{grid-template-columns:1fr 1fr 1fr}
  .kinds{grid-template-columns:1fr 1fr 1fr 1fr}
@@ -372,6 +405,16 @@ table.sizes th{font-size:.78rem;letter-spacing:.08em;color:var(--muted)}
   position:absolute;inset-inline-start:6vw;bottom:8%;
   width:min(34rem,38vw);padding:28px 32px 32px;background:var(--paper);
  }
+ .hero-bleed.has-photo .hero-copy{
+  position:absolute;inset-inline-start:6vw;bottom:8%;
+  display:flex;flex-direction:column;
+  width:min(34rem,38vw);padding:28px 32px 32px;
+  background:#f3efe6;color:#1c1916;
+  box-shadow:0 16px 40px rgba(28,25,22,.16);
+ }
+ .page-plate.has-photo img{aspect-ratio:4/5}
+ .atmo-rail{display:grid;grid-template-columns:1fr 1fr 1fr;overflow:visible}
+ .atmo-rail figure{flex:none;min-width:0}
  .page-head{grid-template-columns:minmax(0,1.05fr) minmax(280px,.85fr);gap:48px}
  .layout{grid-template-columns:210px minmax(0,1fr);align-items:start}
  #filters{position:sticky;top:108px}

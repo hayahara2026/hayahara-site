@@ -3,6 +3,7 @@
 # Self-contained: no path outside this repo.
 import html as H
 import json, os, re, shutil, sys
+import atmosphere
 import media_slot
 import plates
 
@@ -277,6 +278,7 @@ PRODUCTS = load_products()
 BY_SLUG = {p["slug"]: p for p in PRODUCTS}
 BY_SKU = {p["sku"]: p for p in PRODUCTS}
 RANGE_FILES = media_slot.range_files(os.path.join(R, "range"))
+ATMOS = {}
 
 # copy pages
 PAGES = {}
@@ -412,7 +414,7 @@ def product_faq(p):
 SITEMAP = []
 
 
-def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class="", dock=""):
+def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class="", dock="", og_image=""):
     if len(title) > 60:
         print("TITLE OVER 60:", len(title), title)
     graph = [org(), crumbs_ld([(B, "/mapot/")] + crumbs)] + (extra or [])
@@ -450,7 +452,7 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
 <meta property="og:url" content="{esc(canon)}">
 <meta property="og:locale" content="he_IL">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="{esc(B)}">
+<meta property="og:site_name" content="{esc(B)}">{f'{chr(10)}<meta property="og:image" content="{esc(og_image)}">' if og_image else ""}
 <meta name="theme-color" content="#f3efe6">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="preload" href="/mapot/assets/fonts/frank-ruhl-libre.woff2" as="font" type="font/woff2" crossorigin>
@@ -699,6 +701,38 @@ def range_section(files=None):
     )
 
 
+def atmo_picture(slot_id, kind, sizes, priority=False):
+    return atmosphere.picture(ATMOS, slot_id, kind=kind, sizes=sizes, priority=priority)
+
+
+def hall_band():
+    figures = []
+    for slot_id in atmosphere.BAND:
+        pic = atmo_picture(slot_id, "band", "(min-width: 900px) 34vw, 80vw")
+        if not pic:
+            continue
+        caption = ATMOS[slot_id].get("caption") or ""
+        figures.append(f"<figure>{pic}<figcaption>{esc(caption)}</figcaption></figure>")
+    if not figures:
+        return ""
+    return (
+        '<section class="atmo-band" aria-labelledby="atmo-h">'
+        '<p class="kicker">אווירה</p>'
+        '<h2 id="atmo-h">אולמות ערוכים</h2>'
+        "<p>צילומי אווירה של שולחנות ערוכים לאירוע.</p>"
+        f'<div class="atmo-rail">{"".join(figures)}</div>'
+        "</section>"
+    )
+
+
+def head_plate(slug, fallback):
+    slot_id = atmosphere.HEADERS.get(slug)
+    pic = atmo_picture(slot_id, "header", "(min-width: 960px) 42vw, 100vw") if slot_id else ""
+    if pic:
+        return f'<div class="page-plate has-photo">{pic}</div>'
+    return f'<div class="page-plate">{fallback}</div>'
+
+
 def home():
     pg = PAGES["/mapot/"]
     lede, rest = first_paragraph_and_rest("/mapot/")
@@ -734,17 +768,30 @@ def home():
         f'<li><a href="{u}"><span class="no">{i:02d}</span><span class="nm">{esc(n)}</span><span class="go">לעמוד</span></a></li>'
         for i, (u, n) in enumerate(EVENTS, 1)
     )
+    hero_pic = atmo_picture("hero", "hero", "100vw", priority=True)
+    if hero_pic:
+        stage = f'<div class="hero-stage has-photo">{hero_pic}</div>'
+        bleed = "hero-bleed has-photo"
+        og = ORIGIN + "/mapot/media/atmosphere/hero-wide-1280.jpg"
+    else:
+        stage = f'<div class="hero-stage">{plate_for(hero, "mast", mode="hero")}</div>'
+        bleed = "hero-bleed"
+        og = ""
+    band = hall_band()
+    band_html = ("\n" + band) if band else ""
     body = f"""
-<section class="hero-bleed">
-<div class="hero-stage">{plate_for(hero, "mast", mode="hero")}</div>
+<section class="{bleed}">
+{stage}
 <div class="hero-copy">
+<div class="hero-panel">
 <p class="kicker">{esc(B)} · מבית מכבסת היערה</p>
 <h1 class="display">השכרת מפות<br>לעסקים ולמוסדות</h1>
-<p class="lede">{lede}</p>
 <div class="actions"><a class="btn" href="/mapot/catalog/">לקטלוג</a><a class="btn btn-ghost" href="{WA}">וואטסאפ {PH}</a></div>
 </div>
+<p class="lede">{lede}</p>
+</div>
 </section>
-<nav class="kinds" aria-label="סוגי פריטים">{''.join(kinds)}</nav>
+<nav class="kinds" aria-label="סוגי פריטים">{''.join(kinds)}</nav>{band_html}
 <div class="folio">{''.join(tiles)}</div>{(chr(10) + range_section()) if RANGE_FILES else ""}
 <section class="essay">
 <div class="essay-body prose">{rest}</div>
@@ -755,7 +802,7 @@ def home():
 <ol class="toc">{toc}</ol>
 </section>
 """
-    shell("/mapot/", pg["title"], pg["desc"], [], body, main_class="home")
+    shell("/mapot/", pg["title"], pg["desc"], [], body, main_class="home", og_image=og)
 
 
 def category(url):
@@ -772,7 +819,7 @@ def category(url):
 <h1>{esc(h1)}</h1>
 <p class="lede">{lede}</p>
 </div>
-<div class="page-plate">{plate_for(sample, "cat"+slug)}</div>
+{head_plate(slug, plate_for(sample, "cat"+slug))}
 </header>
 <div class="catalog-top"><p id="resultn" aria-live="polite"></p><button type="button" class="btn-ghost btn filter-open" id="openf" aria-expanded="false" aria-controls="filterpanel">סינון</button></div>
 {filter_bar(prods, lock=slug)}
@@ -818,7 +865,7 @@ def event_page(url):
 <h1>{esc(h1)}</h1>
 <p class="lede">{lede}</p>
 </div>
-<div class="page-plate">{fig}</div>
+{head_plate(slug, fig)}
 </header>
 <div class="prose">{rest}</div>
 <div class="actions">{chips}</div>
@@ -1164,7 +1211,10 @@ def forbid():
 
 
 def main():
+    global ATMOS
     shutil.rmtree(OUT, ignore_errors=True)
+    os.makedirs(os.path.join(OUT, "media", "atmosphere"), exist_ok=True)
+    ATMOS = atmosphere.render(os.path.join(R, "atmosphere"), os.path.join(OUT, "media", "atmosphere"))
     home()
     for slug, _t, _n, _s in CATS:
         category(f"/mapot/{slug}/")

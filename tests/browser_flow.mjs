@@ -40,6 +40,37 @@ async function desktop() {
   await ready();
   const lines = await h1Lines();
   if (lines > 2) throw new Error("home h1 lines " + lines);
+  const heroDesk = await page.$eval(".hero-stage img", (el) => el.currentSrc || el.src);
+  if (!heroDesk.includes("hero-wide-")) throw new Error("desktop hero crop " + heroDesk);
+  const tilePhotos = await page.$$eval(".tile img, .item img", (els) => els.length);
+  if (tilePhotos) throw new Error("product card is a photograph");
+  const contrast = await page.evaluate(() => {
+    const lin = (c) => {
+      const v = c / 255;
+      return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    };
+    const L = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+    const parse = (css) => {
+      const m = css.match(/rgba?\(([^)]+)\)/);
+      const p = m[1].split(",").map((s) => parseFloat(s));
+      return { rgb: p.slice(0, 3), a: p.length > 3 ? p[3] : 1 };
+    };
+    const ratio = (fg, bg) => {
+      const a = L(fg);
+      const b = L(bg);
+      const hi = Math.max(a, b);
+      const lo = Math.min(a, b);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    const panel = getComputedStyle(document.querySelector(".hero-copy"));
+    const bg = parse(panel.backgroundColor);
+    const h1 = parse(getComputedStyle(document.querySelector(".hero-copy h1")).color);
+    const lede = parse(getComputedStyle(document.querySelector(".hero-copy .lede")).color);
+    return { a: bg.a, h1: ratio(h1.rgb, bg.rgb), lede: ratio(lede.rgb, bg.rgb) };
+  });
+  if (contrast.a < 1 || contrast.h1 < 4.5 || contrast.lede < 4.5) {
+    throw new Error("hero contrast " + JSON.stringify(contrast));
+  }
   const badge = await page.$eval(".cartlink", (el) => {
     const label = el.querySelector(".cartlabel").getBoundingClientRect();
     const mark = el.querySelector(".badge").getBoundingClientRect();
@@ -154,6 +185,35 @@ async function mobile() {
   await ready();
   const mobileLines = await h1Lines();
   if (mobileLines > 2) throw new Error("mobile home h1 lines " + mobileLines);
+  const heroMob = await page.$eval(".hero-stage img", (el) => el.currentSrc || el.src);
+  if (!heroMob.includes("hero-narrow-")) throw new Error("mobile hero crop " + heroMob);
+  const mobileContrast = await page.evaluate(() => {
+    const lin = (c) => {
+      const v = c / 255;
+      return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    };
+    const L = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+    const parse = (css) => {
+      const m = css.match(/rgba?\(([^)]+)\)/);
+      const p = m[1].split(",").map((s) => parseFloat(s));
+      return { rgb: p.slice(0, 3), a: p.length > 3 ? p[3] : 1 };
+    };
+    const ratio = (fg, bg) => {
+      const a = L(fg);
+      const b = L(bg);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    };
+    const panelEl = document.querySelector(".hero-panel");
+    const img = document.querySelector(".hero-stage img").getBoundingClientRect();
+    const panel = panelEl.getBoundingClientRect();
+    const bg = parse(getComputedStyle(panelEl).backgroundColor);
+    const h1 = parse(getComputedStyle(panelEl.querySelector("h1")).color);
+    const open = panel.top - img.top;
+    return { a: bg.a, h1: ratio(h1.rgb, bg.rgb), open: Math.round(open), imgH: Math.round(img.height) };
+  });
+  if (mobileContrast.a < 1 || mobileContrast.h1 < 4.5 || mobileContrast.open < 220) {
+    throw new Error("mobile hero panel " + JSON.stringify(mobileContrast));
+  }
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2);
   if (wide) throw new Error("mobile home overflows");
   await shot("home-mobile");
