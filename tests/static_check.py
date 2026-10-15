@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""Static checks for the generated /mapot/ site. Run after build_mapot.py."""
+import json, re, sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SITE = ROOT / "mapot"
+SRC = json.loads((ROOT / "mapot-src" / "data" / "products.json").read_text(encoding="utf-8"))
+CFG = json.loads((ROOT / "mapot-src" / "config.json").read_text(encoding="utf-8"))
+
+COLOR_NAMES = ["לבן", "שמנת", "שמפניה", "זהב", "אפור בהיר", "אפור פחם", "שחור", "כחול נייבי", "ירוק מרווה", "בורדו"]
+COLOR_HEX = [c["hex"].lower() for c in SRC["colors"]]
+FORBIDDEN = re.compile(r"מלאי|אנחנו לא|\[ממתין לצבי\]|תמונה תתווסף|photo coming soon", re.I)
+EMOJI = re.compile("[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF]")
+fail = []
+
+
+def bad(msg):
+    fail.append(msg)
+
+
+if CFG.get("preview") is not True:
+    bad("config preview must stay true")
+if CFG.get("show_availability") not in (False, None):
+    bad("show_availability must stay false until the inventory sync exists")
+
+htmls = sorted(SITE.rglob("*.html"))
+if len(htmls) < 20:
+    bad(f"too few pages: {len(htmls)}")
+
+public_text = []
+for path in SITE.rglob("*"):
+    if not path.is_file() or path.name.startswith("_"):
+        continue
+    if path.suffix.lower() not in {".html", ".css", ".js", ".txt", ".xml"}:
+        continue
+    public_text.append((path, path.read_text(encoding="utf-8")))
+
+for path, text in public_text:
+    if FORBIDDEN.search(text):
+        bad(f"forbidden wording in {path.relative_to(ROOT)}")
+    if EMOJI.search(text):
+        bad(f"emoji in {path.relative_to(ROOT)}")
+    if "fonts.googleapis.com" in text or "fonts.gstatic.com" in text:
+        bad(f"third-party font request in {path.relative_to(ROOT)}")
+
+for path in htmls:
+    text = path.read_text(encoding="utf-8")
+    rel = path.relative_to(SITE)
+    title = re.search(r"<title>(.*?)</title>", text)
+    if not title:
+        bad(f"missing title {rel}")
+    elif len(title.group(1)) > 60:
+        bad(f"title {len(title.group(1))}>60 {rel}: {title.group(1)}")
+    if text.count("<h1") != 1:
+        bad(f"h1 count {text.count('<h1')} {rel}")
+    if 'name="robots" content="noindex"' not in text:
+        bad(f"missing noindex {rel}")
+    if 'rel="canonical"' not in text:
+        bad(f"missing canonical {rel}")
+    if 'lang="he"' not in text or 'dir="rtl"' not in text:
+        bad(f"missing he/rtl {rel}")
+    blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', text)
+    if not blocks:
+        bad(f"missing json-ld {rel}")
+    for block in blocks:
+        try:
+            data = json.loads(block)
+        except json.JSONDecodeError as e:
+            bad(f"json-ld {rel}: {e}")
+            continue
+        blob = json.dumps(data, ensure_ascii=False)
+        for hx in COLOR_HEX:
+            if hx in blob.lower():
+                bad(f"placeholder color hex in json-ld {rel}")
+        for node in data.get("@graph", []):
+            if node.get("@type") == "Product":
+                if "offers" in node or "aggregateRating" in node or "review" in node:
+                    bad(f"product schema has offer/rating {rel}")
+                for name in COLOR_NAMES:
+                    if name in json.dumps(node, ensure_ascii=False):
+                        bad(f"placeholder color name in product schema {rel}: {name}")
+    for href in re.findall(r'(?:href|src)="(/mapot/[^"]*)"', text):
+        target = href.split("#")[0].split("?")[0]
+        if target.endswith("/"):
+            fp = SITE / target[len("/mapot/"):] / "index.html"
+        else:
+            fp = SITE / target[len("/mapot/"):]
+        if not fp.is_file():
+            bad(f"broken {href} from {rel}")
+
+chair_pages = [
+    SITE / "chair-covers" / "index.html",
+    SITE / "catalog" / "cc-std" / "index.html",
+]
+for path in chair_pages:
+    text = path.read_text(encoding="utf-8")
+    for name in COLOR_NAMES:
+        if name in text:
+            bad(f"color name on chair page {path.name}: {name}")
+    low = text.lower()
+    for hx in COLOR_HEX:
+        if hx in low:
+            bad(f"color hex on chair page {path.name}: {hx}")
+    if "צבע" in text:
+        bad(f"color word on chair page {path.name}")
+
+products = json.loads((SITE / "_products.json").read_text(encoding="utf-8"))
+published = [p for p in SRC["products"] if p.get("published")]
+if len(published) != 15:
+    bad(f"expected 15 published products, got {len(published)}")
+if set(products) != {p["sku"] for p in published}:
+    bad(" _products.json sku set does not match published products")
+for sku in ("TC-LINEN-ROUND", "TC-SATIN-ROUND", "TC-FLORAL-*"):
+    if sku not in products:
+        bad(f"missing published sku {sku}")
+if products.get("CC-STD", {}).get("colors"):
+    bad("chair cover must have no colors in the API map")
+for sku, row in products.items():
+    if sku == "CC-STD":
+        continue
+    if not row.get("colors"):
+        bad(f"expected colors on {sku} while show_placeholder_colors is on")
+
+sm = (SITE / "sitemap.xml").read_text(encoding="utf-8")
+if "/mapot/order/" in sm:
+    bad("order page is in the sitemap")
+if "tc-floral" not in sm or "tc-linen-round" not in sm or "tc-satin-round" not in sm:
+    bad("sitemap missing a newly published product")
+robots = (SITE / "robots.txt").read_text(encoding="utf-8")
+if CFG["preview"] and "Disallow: /mapot/" not in robots:
+    bad("preview robots should not advertise the catalog")
+if CFG["preview"] and "Sitemap:" in robots:
+    bad("preview robots advertises a sitemap")
+llms = (SITE / "llms.txt").read_text(encoding="utf-8")
+for needle in (CFG["phone"], CFG["email"], "עוטף ירושלים", "לקבלת הצעת מחיר"):
+    if needle not in llms:
+        bad(f"llms.txt missing {needle}")
+if any(hx in llms.lower() for hx in COLOR_HEX):
+    bad("llms.txt lists placeholder color hex")
+
+home = (SITE / "index.html").read_text(encoding="utf-8")
+if 'data-avail="1"' in home:
+    bad("availability UI flag is on")
+if "id=\"availnote\"" in (SITE / "catalog" / "tc-linen-3x3" / "index.html").read_text(encoding="utf-8"):
+    bad("availability note is rendered while the flag is off")
+
+if fail:
+    print("\n".join(fail))
+    sys.exit(1)
+print(f"static ok: {len(htmls)} pages, {len(products)} skus")

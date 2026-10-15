@@ -1,112 +1,1096 @@
-# Builds /mapot/ from the copywriter file. Brand: ONLY mapot-src/config.json "brand" ({BRAND} in copy).
-import json,os,re,html,shutil
-R=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.dirname(R)
-C=json.load(open(os.path.join(R,'config.json')));B=C['brand'];BASE=C['base'];WA=C['wa'];PH=C['phone']
-SRC=C.get('copy','/workspace/copywriter/mapot-site-texts-2026-10-15.md');shutil.copy(SRC,os.path.join(R,'copy.md'))
-md=open(os.path.join(R,'copy.md')).read().replace('{BRAND}',B)
-OUT=os.path.join(ROOT,'mapot');shutil.rmtree(OUT,ignore_errors=True)
-PEND='<span class="pend">[ממתין לצבי]</span>'
+#!/usr/bin/env python3
+# Builds /mapot/ from mapot-src/copy.md + mapot-src/data/products.json.
+# Self-contained: no path outside this repo.
+import html as H
+import json, os, re, shutil, sys
+import plates
+
+R = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(R)
+C = json.load(open(os.path.join(R, "config.json"), encoding="utf-8"))
+B = C["brand"]
+BASE = C["base"].rstrip("/") + "/"
+ORIGIN = C["origin"].rstrip("/")
+WA = C["wa"]
+PH = C["phone"]
+EMAIL = C["email"]
+SHOW_COLORS = bool(C.get("show_placeholder_colors", True))
+SHOW_AVAIL = bool(C.get("show_availability", False))
+PREVIEW = bool(C.get("preview", True))
+
+copy_rel = C.get("copy", "copy.md")
+copy_path = copy_rel if os.path.isabs(copy_rel) else os.path.join(R, copy_rel)
+if not os.path.isfile(copy_path):
+    sys.exit("copy file missing: " + copy_path)
+md = open(copy_path, encoding="utf-8").read().replace("{BRAND}", B)
+
+OUT = os.path.join(ROOT, "mapot")
+shutil.rmtree(OUT, ignore_errors=True)
+
+DATA = json.load(open(os.path.join(R, "data", "products.json"), encoding="utf-8"))
+COLORS = {c["key"]: c for c in DATA["colors"]}
+MATS = {m["code"]: m for m in DATA["materials"]}
+MAT_PHRASE = {"satin": "מסאטן", "linen": "מפשתן", "floral": "מבד פרחים"}
+TYPE_ORDER = ["tablecloth", "napkin", "runner", "chair_cover"]
+SIZE_ORDER = ["1.5×1.5", "1.5×3", "2.2×2.2", "3×3", "עגולה"]
+FAB_ORDER = ["satin", "linen", "floral"]
+CATS = [
+    ("tablecloths", "tablecloth", "מפות", "מפה"),
+    ("napkins", "napkin", "מפיות", "מפית"),
+    ("runners", "runner", "ראנרים", "ראנר"),
+    ("chair-covers", "chair_cover", "כיסויי כיסאות", "כיסוי כיסא"),
+]
+CAT_BY_TYPE = {t: (slug, name) for slug, t, name, _ in CATS}
+NAV = [
+    ("/mapot/catalog/", "קטלוג"),
+    ("/mapot/tablecloths/", "מפות"),
+    ("/mapot/napkins/", "מפיות"),
+    ("/mapot/runners/", "ראנרים"),
+    ("/mapot/chair-covers/", "כיסויי כיסאות"),
+    ("/mapot/halls-catering/", "אולמות"),
+    ("/mapot/service-areas/", "אזורים"),
+    ("/mapot/faq/", "שאלות"),
+]
+EVENTS = [
+    ("/mapot/wedding/", "חתונה"),
+    ("/mapot/bar-mitzvah/", "בר מצווה"),
+    ("/mapot/brit/", "ברית"),
+    ("/mapot/sheva-brachot/", "שבע ברכות"),
+    ("/mapot/halls-catering/", "אולמות וקייטרינג"),
+]
+PHOTO_EXT = {".jpg", ".jpeg", ".png", ".webp", ".avif"}
+FAQ_FIX = {
+    "באילו מידות יש מפות?": "מפות במידות 1.5×1.5, 1.5×3, 2.2×2.2 ו־3×3, וגם מפה עגולה.",
+    "כמה זה עולה?": "לקבלת הצעת מחיר, לפי הפריטים והכמות.",
+}
+ORG_ID = ORIGIN + "/#business"
+
+
+def esc(s):
+    return H.escape("" if s is None else str(s), quote=True)
+
+
+def strip_pending(s):
+    if "[ממתין לצבי]" not in s:
+        return s.strip()
+    parts = re.split(r"(?<=[\.!?])\s+", s)
+    kept = [p.strip() for p in parts if p.strip() and "[ממתין לצבי]" not in p]
+    return " ".join(kept).strip()
+
+
 def inl(s):
-  s=html.escape(s,quote=False);s=re.sub(r'\*\*(.+?)\*\*',r'<strong>\1</strong>',s)
-  s=s.replace('[ממתין לצבי]',PEND).replace('053-2535393',f'<a href="{WA}">053-2535393</a>').replace('office@hayahara.co.il','<a href="mailto:office@hayahara.co.il">office@hayahara.co.il</a>');return s
+    s = strip_pending(s)
+    if not s:
+        return ""
+    s = H.escape(s, quote=False)
+    s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
+    s = s.replace(PH, f'<a href="{WA}">{PH}</a>')
+    s = s.replace(EMAIL, f'<a href="mailto:{EMAIL}">{EMAIL}</a>')
+    return s
+
+
 def md2html(lines):
-  o=[];ul=False;tbl=[]
-  for l in lines:
-    l=l.rstrip()
-    if l.startswith('|'):
-      if not re.match(r'^\|[-|\s]+\|$',l):tbl.append([c.strip() for c in l.strip('|').split('|')])
-      continue
-    if tbl:o.append('<table>'+''.join('<tr>'+''.join(f'<{"th" if i==0 else "td"}>{inl(c)}</{"th" if i==0 else "td"}>' for c in r)+'</tr>' for i,r in enumerate(tbl))+'</table>');tbl=[]
-    if l.startswith('- '):
-      if not ul:o.append('<ul>');ul=True
-      o.append(f'<li>{inl(l[2:])}</li>');continue
-    if ul:o.append('</ul>');ul=False
-    if not l or l.startswith('(') or l=='---':continue
-    m=re.match(r'^(#{1,2}) (.*)',l)
-    if m:o.append(f'<h{len(m.group(1))}>{inl(m.group(2))}</h{len(m.group(1))}>');continue
-    o.append(f'<p>{inl(l)}</p>')
-  if ul:o.append('</ul>')
-  return '\n'.join(o)
-# split pages by headings that carry a /mapot/ URL
-P={}
-for m in re.finditer(r'^#{2,3} [\d.]+ ([^:\n]+): (/mapot/[^\s]*)\n(.*?)(?=^#{2,3} [\d.]+ |^## שאלות פתוחות|\Z)',md,re.S|re.M):
-  name,url,body=m.group(1).strip(),m.group(2),m.group(3)
-  t=re.search(r'\*\*title:\*\* (.*)',body).group(1);d=re.search(r'\*\*meta description:\*\* (.*)',body).group(1)
-  lines=[x for x in body.split('\n') if not x.startswith('**title') and not x.startswith('**meta')]
-  P[url]=dict(name=name,title=t,desc=d,lines=lines)
-FOOT=[l[2:] for l in md.split('\n') if l.startswith('> ')]
-cart=P.pop('/mapot/order/');cl={k:v for k,v in re.findall(r'\*\*([^*]+):\*\* (.*)','\n'.join(cart['lines']))}
-# product template (section 6)
-T={}
-for m in re.finditer(r'^### 6\.\d (.+?)\n(.*?)(?=^### |^---)',md,re.S|re.M):
-  b=m.group(2);T[m.group(1).strip()]=dict(name=re.search(r'\*\*שם מוצר:\*\* (.*)',b).group(1),desc=re.search(r'\*\*תיאור:\*\* (.*)',b).group(1),pts=re.findall(r'^- (.*)',b,re.M),btn=re.search(r'\*\*כפתור:\*\* (.*)',b).group(1),qty=re.search(r'\*\*הערה לשדה הכמות:\*\* (.*)',b).group(1))
-CATS=[('tablecloths','מפות','מפה'),('napkins','מפיות','מפית'),('runners','ראנרים','ראנר'),('chair-covers','כיסויי כיסאות','כיסוי כיסא')]
-W='[ממתין לצבי]'
-# products: only 3x3 confirmed; one marked example per category
-PRODUCTS=[dict(slug='tablecloth-3x3',cat='tablecloths',size='3×3',color=W,example=False)]+[dict(slug=f'{c}-example',cat=c,size=W,color=None if c=='chair-covers' else W,example=True) for c,_,_ in CATS]
-def fill(s,p):return s.replace('{SIZE}',p['size']).replace(' | {COLOR}','' if p['color'] is None else ' | '+p['color']).replace('{COLOR}',p['color'] or '')
-for p in PRODUCTS:
-  t=T[[x for c,_,x in CATS if c==p['cat']][0]];p['name']=fill(t['name'],p);p['desc']=fill(t['desc'],p);p['t']=t;p['catname']=[n for c,n,_ in CATS if c==p['cat']][0]
-pages=[]
-ORG={"@type":"LocalBusiness","@id":"https://hayahara.co.il/#business","name":"מכבסת היערה","alternateName":B,"brand":{"@type":"Brand","name":B},"url":BASE,"telephone":"+972-53-2535393","email":"office@hayahara.co.il","address":{"@type":"PostalAddress","streetAddress":"פרי גן 16","addressLocality":"מישור אדומים","addressCountry":"IL"}}
-NAV=[('/mapot/catalog/','קטלוג'),('/mapot/tablecloths/','מפות'),('/mapot/napkins/','מפיות'),('/mapot/runners/','ראנרים'),('/mapot/chair-covers/','כיסויי כיסאות'),('/mapot/halls-catering/','אולמות וקייטרינג'),('/mapot/service-areas/','אזורי שירות'),('/mapot/faq/','שאלות נפוצות')]
-EVENTS=['/mapot/wedding/','/mapot/bar-mitzvah/','/mapot/brit/','/mapot/sheva-brachot/','/mapot/halls-catering/']
-def esc(s):return html.escape(s.replace('[ממתין לצבי]','(ממתין לאישור)'))
-def page(url,title,desc,crumbs,body,extra=None,noindex=False):
-  path=url[len('/mapot/'):];g=[ORG,{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":i+1,"name":n,"item":"https://hayahara.co.il"+u} for i,(n,u) in enumerate([(B,'/mapot/')]+crumbs)]}]+(extra or [])
-  cr=' › '.join(f'<a href="{u}">{html.escape(n)}</a>' for n,u in [(B,'/mapot/')]+crumbs)
-  rob='<meta name="robots" content="noindex">' if (C['preview'] or noindex) else ''
-  h=f"""<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{esc(title)}</title><meta name="description" content="{esc(desc)}">{rob}<link rel="canonical" href="https://hayahara.co.il{url}">
-<meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="https://hayahara.co.il{url}"><meta property="og:locale" content="he_IL"><meta property="og:site_name" content="{html.escape(B)}">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500&family=Heebo:wght@300;400;500&display=swap"><link rel="stylesheet" href="/mapot/assets/mapot.css"><script type="application/ld+json">{json.dumps({"@context":"https://schema.org","@graph":g},ensure_ascii=False)}</script><script src="/mapot/assets/cart.js" defer></script></head><body>
-<header><a class="logo" href="/mapot/">{html.escape(B)}</a><a class="cartlink" href="/mapot/order/">סל ההזמנה <span id="cartn">0</span></a>
-<nav>{''.join(f'<a href="{u}">{n}</a>' for u,n in NAV)}</nav></header>
-<main>{'' if not crumbs else f'<div class="crumb">{cr}</div>'}{body}</main>
-<footer><p>{'<br>'.join(html.escape(x) for x in FOOT)}</p><p>טלפון ווואטסאפ: <a href="{WA}">053-2535393</a> | <a href="mailto:office@hayahara.co.il">office@hayahara.co.il</a> | <a href="https://hayahara.co.il/">מכבסת היערה</a></p>
-<p>{' · '.join(f'<a href="{u}">{n}</a>' for u,n in NAV+[(e,P[e]["name"]) for e in EVENTS[:4]])}</p></footer>
-<a class="fab" href="{WA}" aria-label="וואטסאפ להזמנה">וואטסאפ 053-2535393</a></body></html>"""
-  d=os.path.join(OUT,path);os.makedirs(d,exist_ok=True);open(os.path.join(d,'index.html'),'w').write(h)
-  if not (noindex) :pages.append((url,title))
-ph=lambda t:f'<div class="ph">תמונה תתווסף · {html.escape(t)}</div>'
-def card(p):return f'<a class="card" href="/mapot/catalog/{p["slug"]}/" data-type="{p["cat"]}" data-size="{html.escape(p["size"])}"><div class="ph sm">תמונה תתווסף</div>{"<span class=ex>דוגמה</span>" if p["example"] else ""}<strong>{inl(p["name"])}</strong><small>{p["catname"]}</small></a>'
-def grid(ps):return '<div class="grid" id="grid">'+''.join(card(p) for p in ps)+'</div>'
-catlinks='<div class="chips">'+''.join(f'<a class="chip" href="/mapot/{c}/">{n}</a>' for c,n,_ in CATS)+'</div>'
-evlinks='<div class="chips">'+''.join(f'<a class="chip" href="{e}">{P[e]["name"]}</a>' for e in EVENTS)+'</div>'
-for url,pg in P.items():
-  body=md2html(pg['lines']);crumbs=[] if url=='/mapot/' else [(pg['name'],url)];extra=[]
-  c=url.strip('/').split('/')[-1]
-  if url=='/mapot/':body=f'<section class="hero"><span class="eyebrow">השכרת טקסטיל לשולחן האירוע</span>{body.split("</h1>")[0]}</h1><a class="btn" href="/mapot/catalog/">לקטלוג</a> <a class="btn wa" href="{WA}">וואטסאפ 053-2535393</a></section>{ph("עמוד הבית")}'+body.split('</h1>',1)[1]+'<h2>הקטלוג</h2>'+grid(PRODUCTS)+'<h2>לפי סוג אירוע</h2>'+evlinks
-  elif c in [x for x,_,_ in CATS]:
-    crumbs=[('קטלוג','/mapot/catalog/'),(pg['name'],url)];body=ph(pg['name'])+body+'<h2>פריטים</h2>'+grid([p for p in PRODUCTS if p['cat']==c])+catlinks
-    extra=[{"@type":"Service","name":pg['name'],"serviceType":"השכרה","provider":{"@id":BASE+"#business"},"url":"https://hayahara.co.il"+url}]
-  elif url in EVENTS:body=ph(pg['name'])+body+catlinks+evlinks;extra=[{"@type":"Service","name":re.sub(r'<.*?>','',pg['title'].split('|')[0]).strip(),"provider":{"@id":BASE+"#business"}}]
-  elif url=='/mapot/faq/':
-    qa=re.findall(r'^## (.+)\n(.+)','\n'.join(pg['lines']),re.M)
-    extra=[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in qa if '[ממתין לצבי]' not in a]}]
-  elif url=='/mapot/service-areas/':extra=[{"@type":"Service","name":"השכרת מפות ומפיות","provider":{"@id":BASE+"#business"},"areaServed":["השרון","גוש דן","עוטף ירושלים","ים המלח","גוש עציון"]}];body+=catlinks
-  page(url,pg['title'],pg['desc'],crumbs,body+f'<p><a class="btn" href="/mapot/catalog/">לקטלוג ולהזמנה</a></p>',extra)
-# catalog with filters
-sizes=sorted({p['size'] for p in PRODUCTS})
-flt='<div class="filters"><label>סוג <select id="ft"><option value="">הכול</option>'+''.join(f'<option value="{c}">{n}</option>' for c,n,_ in CATS)+'</select></label><label>מידה <select id="fs"><option value="">הכול</option>'+''.join(f'<option>{html.escape(s)}</option>' for s in sizes)+'</select></label></div>'
-page('/mapot/catalog/',f'קטלוג השכרת מפות, מפיות, ראנרים וכיסויי כיסאות | {B}',f'קטלוג {B}: מפות, מפיות, ראנרים וכיסויי כיסאות להשכרה. בוחרים פריטים וכמויות ושולחים בקשת הזמנה.',[('קטלוג','/mapot/catalog/')],
- '<h1>קטלוג</h1><p>בוחרים פריטים, מוסיפים להזמנה ושולחים. את הכמויות ואת המשלוח מאשרים איתכם בשיחה.</p><p class="note">פריטים המסומנים «דוגמה» הם תבנית לתצוגה; פרטי הפריט <span class="pend">[ממתין לצבי]</span>.</p>'+flt+grid(PRODUCTS)+catlinks)
-for p in PRODUCTS:
-  t=p['t'];url=f'/mapot/catalog/{p["slug"]}/'
-  body=f'<div class="prod"><div class="ph big">תמונה תתווסף</div><div><h1>{inl(p["name"])}</h1>{"<p class=note>דוגמה: פריט לתצוגה, פרטיו ממתינים לאישור.</p>" if p["example"] else ""}<p>{inl(p["desc"])}</p><ul>'+''.join(f'<li>{inl(x)}</li>' for x in t['pts'])+f'</ul><label class="qty">{html.escape(t["qty"])}<input type="number" id="q" min="1" max="10000" value="1" inputmode="numeric"></label><button class="btn" id="add" data-slug="{p["slug"]}" data-name="{html.escape(p["name"])}">{t["btn"]}</button> <span id="added" hidden>נוסף לסל. <a href="/mapot/order/">לסל ההזמנה</a></span></div></div>'
-  ex=None if p['example'] else [{"@type":"Product","name":p['name'].replace(W,'').strip(' |'),"description":p['desc'].replace(W,'').replace('  ',' '),"category":p['catname'],"size":p['size'],"brand":{"@type":"Brand","name":B},"url":"https://hayahara.co.il"+url}]
-  page(url,f'{p["name"]} | {B}',re.sub(r'\s+',' ',p['desc']),[('קטלוג','/mapot/catalog/'),(p['catname'],f'/mapot/{p["cat"]}/'),(p['name'],url)],body,ex,noindex=p['example'])
-labels=cl['תוויות שדות'].split(' | ');names=['business','contact','phone','email','event_date','address','notes'];types=['text','text','tel','email','date','text','textarea']
-req={'contact','phone','event_date','address'}
-fields=''.join(f'<label>{l}{" *" if n in req else ""}'+(f'<textarea name="{n}" maxlength="1000"></textarea>' if t=='textarea' else f'<input name="{n}" type="{t}" maxlength="200"{" required" if n in req else ""}{" pattern=0?5[0-9]-?[0-9]{{7}}|0[2-9]-?[0-9]{{7}}" if n=="phone" else ""}>')+'</label>' for l,n,t in zip(labels,names,types))
-page('/mapot/order/',cart['title'],cart['desc'],[('סל ההזמנה','/mapot/order/')],
- f'<h1>סל ההזמנה</h1><p>{inl(cl["טקסט פתיחה"])}</p><div id="empty" hidden><p>{inl(cl["סל ריק"])}</p><a class="btn" href="/mapot/catalog/">לקטלוג</a></div><div id="cartbox"><table id="cart"></table>'
- f'<form id="orderform" novalidate>{fields}<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label><button class="btn" type="submit">{cl["כפתור"]}</button><p id="err" class="err" hidden></p></form></div><div id="done" hidden><p>{inl(cl["הודעת אישור"])}</p></div>')
-os.makedirs(OUT+'/assets',exist_ok=True)
-for f in ('mapot.css','cart.js'):shutil.copy(os.path.join(R,f),OUT+'/assets/'+f)
-RED={'/services/tablecloth-rental.html':'/mapot/','/services/event-hall-tablecloth-rental.html':'/mapot/halls-catering/','/services/tablecloth-rental-jerusalem.html':'/mapot/service-areas/','/services/tablecloth-rental-gush-etzion.html':'/mapot/service-areas/','/services/tablecloth-rental-sharon.html':'/mapot/service-areas/','/services/table-linen.html':'/mapot/tablecloths/'}
-json.dump(RED,open(OUT+'/_redirects.json','w'),ensure_ascii=False,indent=1)
-open(OUT+'/sitemap-mapot.txt','w').write('\n'.join('https://hayahara.co.il'+u for u,_ in pages if u!='/mapot/order/'))
-open(OUT+'/llms-section.txt','w').write(f'\n## {B}: השכרת מפות, מפיות, ראנרים וכיסויי כיסאות (מבית מכבסת היערה)\nהזמנה: טלפון ווואטסאפ 053-2535393, office@hayahara.co.il\n'+'\n'.join(f'- https://hayahara.co.il{u}: {t.replace(W,"").strip()}' for u,t in pages if u!='/mapot/order/')+'\n')
-print(len(pages),'indexable pages;',[u for u,_ in pages])
-json.dump({p['slug']:p['name'] for p in PRODUCTS},open(OUT+'/_products.json','w'),ensure_ascii=False)
+    o, ul, tbl = [], False, []
+
+    def end_ul():
+        nonlocal ul
+        if ul:
+            o.append("</ul>")
+            ul = False
+
+    def end_tbl():
+        nonlocal tbl
+        if not tbl:
+            return
+        header, rows = tbl[0], tbl[1:]
+        tbl = []
+        if not rows:
+            return
+        th = "".join(f"<th>{inl(c)}</th>" for c in header)
+        body = "".join(
+            "<tr>" + "".join(f"<td>{inl(c)}</td>" for c in r) + "</tr>" for r in rows
+        )
+        o.append(f"<table><tr>{th}</tr>{body}</table>")
+
+    for raw in lines:
+        l = raw.rstrip()
+        if l.startswith("|"):
+            end_ul()
+            if re.match(r"^\|[-|\s]+\|$", l):
+                continue
+            cells = [c.strip() for c in l.strip("|").split("|")]
+            if any("[ממתין לצבי]" in c for c in cells):
+                continue
+            tbl.append(cells)
+            continue
+        end_tbl()
+        if l.startswith("- "):
+            item = inl(l[2:])
+            if not item:
+                continue
+            if not ul:
+                o.append("<ul>")
+                ul = True
+            o.append(f"<li>{item}</li>")
+            continue
+        end_ul()
+        if not l or l == "---" or l.startswith("(") or l.startswith("**title") or l.startswith("**meta"):
+            continue
+        m = re.match(r"^(#{1,3}) (.*)", l)
+        if m:
+            level = len(m.group(1))
+            text = inl(m.group(2))
+            if text:
+                o.append(f"<h{level}>{text}</h{level}>")
+            continue
+        text = inl(l)
+        if text:
+            o.append(f"<p>{text}</p>")
+    end_ul()
+    end_tbl()
+    return "\n".join(o)
+
+
+def slug_for(sku):
+    s = sku.lower().replace("*", "")
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+
+
+def photo_files(sku, slug):
+    folder = os.path.join(R, "photos")
+    stems = []
+    for s in (sku, re.sub(r"[^A-Za-z0-9_-]+", "", sku), slug):
+        if s and s not in stems:
+            stems.append(s)
+    found = []
+    if not os.path.isdir(folder):
+        return found
+    for name in sorted(os.listdir(folder)):
+        base, ext = os.path.splitext(name)
+        if ext.lower() not in PHOTO_EXT or name.startswith("."):
+            continue
+        for stem in stems:
+            if base == stem or re.fullmatch(re.escape(stem) + r"-\d+", base):
+                found.append(name)
+                break
+    return found
+
+
+def public_colors(prod):
+    if prod["type"] == "chair_cover" or not prod.get("colors"):
+        return []
+    out = []
+    for key in prod["colors"]:
+        col = COLORS.get(key)
+        if not col:
+            continue
+        if col.get("placeholder") and not SHOW_COLORS:
+            continue
+        out.append(col)
+    return out
+
+
+def mat_name(prod):
+    m = MATS.get(prod.get("material") or "")
+    return m["name_he"] if m else ""
+
+
+def price_label(prod):
+    if prod.get("price") is None:
+        return "לקבלת הצעת מחיר"
+    return f'{prod["price"]} ₪'
+
+
+def blurb(prod):
+    phrase = MAT_PHRASE.get(prod.get("material") or "", "")
+    size = prod.get("size")
+    if prod["type"] == "tablecloth":
+        if size == "עגולה":
+            head = f"מפה עגולה {phrase}".strip()
+        elif size:
+            head = f"מפה {phrase} במידה {size}".strip()
+        else:
+            head = f"מפה {phrase}".strip()
+        return head + ". מגיעה נקייה ומגוהצת, מוכנה לפריסה."
+    if prod["type"] == "napkin":
+        return f"מפית {phrase}. מגיעה נקייה, מוכנה לקיפול, ומשלימה את עריכת השולחן.".replace("  ", " ")
+    if prod["type"] == "runner":
+        extra = f" בצבע לבחירה" if public_colors(prod) else ""
+        return "ראנר לאורך השולחן, שנותן למפה קו עיצובי. מגיע נקי, מוכן לפריסה." if not extra else "ראנר לאורך השולחן, שנותן למפה קו עיצובי. מגיע נקי, מוכן לפריסה."
+    return "כיסוי כיסא שנותן לאולם מראה אחיד ומסודר. מגיע נקי, מוכן להלבשה."
+
+
+def alt_text(prod):
+    fab = mat_name(prod)
+    size = prod.get("size") or ""
+    if prod["type"] == "tablecloth":
+        bits = ["שרטוט מפה", size, fab]
+        return " ".join(x for x in bits if x)
+    if prod["type"] == "napkin":
+        return " ".join(x for x in ("שרטוט מפית מקופלת", fab) if x)
+    if prod["type"] == "runner":
+        return " ".join(x for x in ("שרטוט ראנר", fab) if x)
+    return "שרטוט כיסוי כיסא"
+
+
+def kind_of(prod):
+    return {"tablecloth": "tablecloth", "napkin": "napkin", "runner": "runner", "chair_cover": "chair"}[prod["type"]]
+
+
+def fabric_code(prod):
+    return prod.get("material") or ""
+
+
+def load_products():
+    items = []
+    for prod in DATA["products"]:
+        if not prod.get("published"):
+            continue
+        slug = slug_for(prod["sku"])
+        files = photo_files(prod["sku"], slug)
+        cols = public_colors(prod)
+        items.append({**prod, "slug": slug, "files": files, "public_colors": cols})
+    def key(p):
+        return (
+            TYPE_ORDER.index(p["type"]) if p["type"] in TYPE_ORDER else 9,
+            FAB_ORDER.index(p["material"]) if p.get("material") in FAB_ORDER else 9,
+            SIZE_ORDER.index(p["size"]) if p.get("size") in SIZE_ORDER else 9,
+            p["sku"],
+        )
+    items.sort(key=key)
+    slugs = [p["slug"] for p in items]
+    if len(slugs) != len(set(slugs)):
+        sys.exit("duplicate product slugs")
+    return items
+
+
+PRODUCTS = load_products()
+BY_SLUG = {p["slug"]: p for p in PRODUCTS}
+BY_SKU = {p["sku"]: p for p in PRODUCTS}
+
+# copy pages
+PAGES = {}
+for m in re.finditer(
+    r"^#{2,3} [\d.]+ ([^:\n]+): (/mapot/[^\s]*)\n(.*?)(?=^#{2,3} [\d.]+ |^## שאלות פתוחות|\Z)",
+    md,
+    re.S | re.M,
+):
+    name, url, body = m.group(1).strip(), m.group(2), m.group(3)
+    title = re.search(r"\*\*title:\*\* (.*)", body).group(1).strip()
+    desc = re.search(r"\*\*meta description:\*\* (.*)", body).group(1).strip()
+    lines = [x for x in body.split("\n") if not x.startswith("**title") and not x.startswith("**meta")]
+    PAGES[url] = dict(name=name, title=title, desc=desc, lines=lines)
+
+ORDER = PAGES.pop("/mapot/order/")
+ORDER_FIELDS = dict(re.findall(r"\*\*([^*]+):\*\* (.*)", "\n".join(ORDER["lines"])))
+FOOT = [strip_pending(l[2:]) for l in md.split("\n") if l.startswith("> ") and strip_pending(l[2:])]
+
+TEMPLATES = {}
+for m in re.finditer(r"^### 6\.\d (.+?)\n(.*?)(?=^### |^---)", md, re.S | re.M):
+    b = m.group(2)
+    TEMPLATES[m.group(1).strip()] = dict(
+        pts=[strip_pending(x) for x in re.findall(r"^- (.*)", b, re.M) if strip_pending(x)],
+        btn=re.search(r"\*\*כפתור:\*\* (.*)", b).group(1).strip(),
+        qty=strip_pending(re.search(r"\*\*הערה לשדה הכמות:\*\* (.*)", b).group(1)),
+    )
+TKEY = {"tablecloth": "מפה", "napkin": "מפית", "runner": "ראנר", "chair_cover": "כיסוי כיסא"}
+
+
+def jsonld(obj):
+    s = json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+    return s.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
+
+def org():
+    return {
+        "@type": "LocalBusiness",
+        "@id": ORG_ID,
+        "name": C["parent"],
+        "legalName": C["legal"],
+        "alternateName": B,
+        "brand": {"@type": "Brand", "name": B},
+        "url": BASE,
+        "telephone": C["phone_e164"],
+        "email": EMAIL,
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": C["street"],
+            "addressLocality": C["locality"],
+            "addressCountry": "IL",
+        },
+        "geo": {"@type": "GeoCoordinates", "latitude": 31.794167, "longitude": 35.331778},
+        "areaServed": ["השרון", "גוש דן", "עוטף ירושלים", "ים המלח", "גוש עציון"],
+    }
+
+
+def crumbs_ld(crumbs):
+    items = [{"@type": "ListItem", "position": i + 1, "name": n, "item": ORIGIN + u} for i, (n, u) in enumerate(crumbs)]
+    return {"@type": "BreadcrumbList", "itemListElement": items}
+
+
+def item_list(prods):
+    return {
+        "@type": "ItemList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": i + 1,
+                "name": p["name_he"],
+                "url": ORIGIN + f"/mapot/catalog/{p['slug']}/",
+            }
+            for i, p in enumerate(prods)
+        ],
+    }
+
+
+def product_ld(p):
+    node = {
+        "@type": "Product",
+        "name": p["name_he"],
+        "sku": p["sku"],
+        "description": blurb(p),
+        "category": CAT_BY_TYPE[p["type"]][1],
+        "brand": {"@type": "Brand", "name": B},
+        "url": ORIGIN + f"/mapot/catalog/{p['slug']}/",
+    }
+    if mat_name(p):
+        node["material"] = mat_name(p)
+    if p.get("size"):
+        node["size"] = p["size"]
+    if p["files"]:
+        node["image"] = ORIGIN + "/mapot/media/" + p["files"][0]
+    if isinstance(p.get("price"), (int, float)) and not isinstance(p.get("price"), bool):
+        node["offers"] = {"@type": "Offer", "price": p["price"], "priceCurrency": "ILS", "url": node["url"]}
+    return node
+
+
+def faq_ld(pairs):
+    return {
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in pairs
+            if a
+        ],
+    }
+
+
+def product_faq(p):
+    phone = f"בטלפון או בוואטסאפ {PH}, או במייל {EMAIL}"
+    if p["type"] == "tablecloth":
+        return [
+            ("באיזה מצב מגיעה המפה?", "כל מפה מגיעה נקייה ומגוהצת, מוכנה לפריסה."),
+            ("איך מזמינים?", f"בוחרים את הפריט ואת הכמות ושולחים בקשת הזמנה. אפשר גם {phone}."),
+        ]
+    if p["type"] == "napkin":
+        return [
+            ("באיזה מצב מגיעות המפיות?", "המפיות מגיעות נקיות, מוכנות לקיפול."),
+            ("איך מזמינים?", f"בוחרים כמות ושולחים בקשת הזמנה. אפשר גם {phone}."),
+        ]
+    if p["type"] == "runner":
+        return [
+            ("באיזה מצב מגיע הראנר?", "הראנר מגיע נקי, מוכן לפריסה."),
+            ("איך מזמינים?", f"בוחרים כמות ושולחים בקשת הזמנה. אפשר גם {phone}."),
+        ]
+    return [
+        ("באיזה מצב מגיע הכיסוי?", "הכיסויים מגיעים נקיים, מוכנים להלבשה."),
+        ("איך מזמינים?", f"בוחרים כמות ושולחים בקשת הזמנה. אפשר גם {phone}."),
+    ]
+
+
+SITEMAP = []
+
+
+def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class="", dock=""):
+    if len(title) > 60:
+        print("TITLE OVER 60:", len(title), title)
+    graph = [org(), crumbs_ld([(B, "/mapot/")] + crumbs)] + (extra or [])
+    cr = [(B, "/mapot/")] + crumbs
+    crumb_html = ""
+    if crumbs:
+        bits = []
+        for i, (n, u) in enumerate(cr):
+            if i:
+                bits.append('<span aria-hidden="true">/</span>')
+            if i == len(cr) - 1:
+                bits.append(f"<span>{esc(n)}</span>")
+            else:
+                bits.append(f'<a href="{u}">{esc(n)}</a>')
+        crumb_html = f'<nav class="crumb" aria-label="מיקום">{"".join(bits)}</nav>'
+    robots = '<meta name="robots" content="noindex">' if (PREVIEW or noindex) else ""
+    canon = ORIGIN + url
+    nav = []
+    for u, n in NAV:
+        cur = ' aria-current="page"' if u == url or (u != "/mapot/catalog/" and url.startswith(u)) else ""
+        nav.append(f'<a href="{u}"{cur}>{esc(n)}</a>')
+    avail = "1" if SHOW_AVAIL else "0"
+    foot_nav = "".join(f'<a href="{u}">{esc(n)}</a>' for u, n in NAV + EVENTS[:4])
+    doc = f"""<!DOCTYPE html>
+<html lang="he" dir="rtl" data-avail="{avail}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{esc(title)}</title>
+<meta name="description" content="{esc(desc)}">
+{robots}
+<link rel="canonical" href="{esc(canon)}">
+<meta property="og:title" content="{esc(title)}">
+<meta property="og:description" content="{esc(desc)}">
+<meta property="og:url" content="{esc(canon)}">
+<meta property="og:locale" content="he_IL">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{esc(B)}">
+<meta name="theme-color" content="#f3efe6">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="preload" href="/mapot/assets/fonts/frank-ruhl-libre.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/mapot/assets/fonts/heebo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/mapot/assets/mapot.css">
+<script type="application/ld+json">{jsonld({"@context": "https://schema.org", "@graph": graph})}</script>
+<script src="/mapot/assets/cart.js" defer></script>
+</head>
+<body class="{'has-dock' if dock else ''}">
+<a class="skip" href="#content">לתוכן</a>
+<header class="hdr">
+<a class="brand" href="/mapot/"><b>{esc(B)}</b><small>מבית מכבסת היערה</small></a>
+<nav class="site-nav" id="sitenav" aria-label="ראשי">{''.join(nav)}</nav>
+<div class="tools">
+<a class="cartlink" href="/mapot/order/">סל ההזמנה <span id="cartn" aria-live="polite">0</span></a>
+<button type="button" class="nav-toggle" id="navtoggle" aria-expanded="false" aria-controls="sitenav">תפריט</button>
+</div>
+</header>
+<main id="content" class="{main_class}"><div class="wrap">
+{crumb_html}
+{body}
+</div></main>
+<footer class="foot"><div class="foot-in">
+<p class="foot-brand">{esc(B)}</p>
+<p>{'<br>'.join(esc(x) for x in FOOT)}</p>
+<p>{esc(C['street'])}, {esc(C['locality'])}<br>
+טלפון ווואטסאפ: <a href="{WA}">{PH}</a><br>
+<a href="mailto:{EMAIL}">{EMAIL}</a></p>
+<p><a href="{ORIGIN}/">מכבסת היערה</a></p>
+<nav class="foot-nav" aria-label="תחתית">{foot_nav}</nav>
+<p class="legal">{esc(C['legal'])} · <a href="{ORIGIN}/accessibility.html">הצהרת נגישות</a> · <a href="{ORIGIN}/privacy.html">פרטיות</a></p>
+</div></footer>
+{dock}
+</body></html>
+"""
+    path = url[len("/mapot/"):]
+    d = os.path.join(OUT, path)
+    os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "index.html"), "w", encoding="utf-8").write(doc)
+    if not noindex or PREVIEW:
+        if url != "/mapot/order/":
+            SITEMAP.append(url)
+
+
+def plate_for(p, uid, stage=False, decorative=False):
+    if p["files"]:
+        imgs = []
+        for i, name in enumerate(p["files"]):
+            alt = alt_text(p) if i == 0 else ""
+            alt_attr = f' alt="{esc(alt)}"' if alt else ' alt=""'
+            imgs.append(f'<img src="/mapot/media/{esc(name)}"{alt_attr}>')
+        cls = "fig fig-photo fig-stage" if stage else "fig fig-photo"
+        return f'<figure class="{cls}"><div class="frame">{"".join(imgs)}</div></figure>'
+    svg, w, h = plates.draw(kind_of(p), fabric_code(p) or None, p.get("size"), uid, stage)
+    if decorative:
+        svg = svg.replace('role="img"', 'aria-hidden="true" focusable="false"', 1)
+        svg = re.sub(r'\saria-label="[^"]*"', "", svg, count=1)
+    cap = plates.caption_for(kind_of(p), fabric_code(p) or None, p.get("size"))
+    cap_attr = ' aria-hidden="true"' if decorative else ""
+    ident = ' id="stage"' if stage else ""
+    cls = "fig fig-stage" if stage else "fig"
+    return (
+        f'<figure class="{cls}"{ident} style="--ar:{w}/{h};--cloth:#f4efe4">'
+        f'<div class="frame">{svg}</div>'
+        f"<figcaption{cap_attr}>{esc(cap)}</figcaption></figure>"
+    )
+
+
+def color_dots(p):
+    if not p["public_colors"]:
+        return ""
+    dots = "".join(
+        f'<i style="--sw:{esc(c["hex"])}"></i>' for c in p["public_colors"]
+    )
+    return f'<span class="dots" aria-hidden="true">{dots}</span>'
+
+
+def card(p, cls=""):
+    cat = CAT_BY_TYPE[p["type"]][0]
+    kicker_bits = [x for x in (mat_name(p), p.get("size") or "") if x]
+    colors = " ".join(c["key"] for c in p["public_colors"])
+    klass = "item" + ((" " + cls) if cls else "")
+    if p["type"] == "runner":
+        klass += " item-runner"
+    return (
+        f'<a class="{klass}" href="/mapot/catalog/{p["slug"]}/" data-type="{cat}" '
+        f'data-size="{esc(p.get("size") or "")}" data-fabric="{esc(fabric_code(p))}" data-colors="{esc(colors)}">'
+        f'{plate_for(p, "card"+p["sku"], decorative=True)}'
+        f'<span class="k">{esc(" · ".join(kicker_bits))}</span>'
+        f'<strong>{esc(p["name_he"])}</strong>'
+        f'<span class="price">{esc(price_label(p))}</span>'
+        f'{color_dots(p)}'
+        f"</a>"
+    )
+
+
+def grid(prods):
+    return f'<div class="catalog-grid" id="grid">{"".join(card(p) for p in prods)}</div>'
+
+
+def filter_bar(prods, lock=""):
+    sizes, fabs = [], []
+    for p in prods:
+        if p.get("size") and p["size"] not in sizes:
+            sizes.append(p["size"])
+        if p.get("material") and p["material"] not in fabs:
+            fabs.append(p["material"])
+    sizes.sort(key=lambda s: SIZE_ORDER.index(s) if s in SIZE_ORDER else 99)
+    fabs.sort(key=lambda s: FAB_ORDER.index(s) if s in FAB_ORDER else 99)
+    show_colors = SHOW_COLORS and lock != "chair-covers" and any(p["public_colors"] for p in prods)
+    parts = ['<div id="filterpanel"><button type="button" class="btn-ghost btn" id="closef">סגירה</button>']
+    if not lock:
+        parts.append('<fieldset><legend>סוג</legend><div class="choices">')
+        parts.append('<button type="button" class="choice" data-filter="type" data-value="" aria-pressed="true">הכול</button>')
+        for slug, _t, name, _s in CATS:
+            parts.append(
+                f'<button type="button" class="choice" data-filter="type" data-value="{slug}" aria-pressed="false">{esc(name)}</button>'
+            )
+        parts.append("</div></fieldset>")
+    if sizes:
+        parts.append('<fieldset><legend>מידה</legend><div class="choices">')
+        parts.append('<button type="button" class="choice" data-filter="size" data-value="" aria-pressed="true">הכול</button>')
+        for s in sizes:
+            parts.append(
+                f'<button type="button" class="choice" data-filter="size" data-value="{esc(s)}" aria-pressed="false">{esc(s)}</button>'
+            )
+        parts.append("</div></fieldset>")
+    if fabs and lock != "chair-covers":
+        parts.append('<fieldset><legend>בד</legend><div class="choices">')
+        parts.append('<button type="button" class="choice" data-filter="fabric" data-value="" aria-pressed="true">הכול</button>')
+        for code in fabs:
+            parts.append(
+                f'<button type="button" class="choice" data-filter="fabric" data-value="{esc(code)}" aria-pressed="false">{esc(MATS[code]["name_he"])}</button>'
+            )
+        parts.append("</div></fieldset>")
+    if show_colors:
+        parts.append('<fieldset><legend>צבע</legend><div class="swatches">')
+        parts.append('<button type="button" class="choice" data-filter="color" data-value="" aria-pressed="true">הכול</button>')
+        for key, col in COLORS.items():
+            if col.get("placeholder") and not SHOW_COLORS:
+                continue
+            if not any(key in [c["key"] for c in p["public_colors"]] for p in prods):
+                continue
+            parts.append(
+                f'<button type="button" class="swatch" data-filter="color" data-value="{esc(key)}" aria-pressed="false" aria-label="{esc(col["name"])}" style="--sw:{esc(col["hex"])}"></button>'
+            )
+        parts.append("</div></fieldset>")
+    parts.append("</div>")
+    return (
+        f'<div class="layout"><div id="filters" data-lock="{esc(lock)}">{"".join(parts)}</div><div>'
+    )
+
+
+def close_layout():
+    return (
+        '<p id="emptyf" hidden>לבחירה הזו אין פריטים בקטלוג. '
+        '<button type="button" id="resetf">איפוס הסינון</button></p></div></div>'
+    )
+
+
+def split_head(html):
+    html = re.sub(r"^<h1>.*?</h1>\n?", "", html, count=1)
+    m = re.match(r"<p>(.*?)</p>\n?", html, re.S)
+    if not m:
+        return "", html
+    return m.group(1), html[m.end():]
+
+
+def size_table():
+    rows = [
+        ("1.5×1.5", "מרובעת"),
+        ("1.5×3", "מלבנית"),
+        ("2.2×2.2", "מרובעת"),
+        ("3×3", "מרובעת"),
+        ("עגולה", "עגולה"),
+    ]
+    body = "".join(f"<tr><td>{esc(a)}</td><td>{esc(b)}</td></tr>" for a, b in rows)
+    return (
+        '<table class="sizes"><caption>מידות מפות להשכרה</caption>'
+        f"<thead><tr><th>מידה</th><th>צורה</th></tr></thead><tbody>{body}</tbody></table>"
+    )
+
+
+def first_paragraph_and_rest(url):
+    html = md2html(PAGES[url]["lines"])
+    if url == "/mapot/tablecloths/":
+        html = html.replace("<h2>מידות מפות להשכרה</h2>", "<h2>מידות מפות להשכרה</h2>\n" + size_table(), 1)
+    return split_head(html)
+
+
+def home():
+    pg = PAGES["/mapot/"]
+    lede, rest = first_paragraph_and_rest("/mapot/")
+    rest = re.sub(r"<h2>נקי ומוכן לפריסה</h2>\s*<p>.*?</p>", "", rest, count=1, flags=re.S)
+    hero = BY_SKU["TC-LINEN-3X3"]
+    kinds = []
+    metas = {
+        "tablecloths": "סאטן, פשתן, פרחים",
+        "napkins": "סאטן ופשתן",
+        "runners": "קו עיצובי לשולחן",
+        "chair-covers": "מראה אחיד לאולם",
+    }
+    samples = {
+        "tablecloths": BY_SKU["TC-LINEN-3X3"],
+        "napkins": BY_SKU["NP-LINEN"],
+        "runners": BY_SKU["RN-STD"],
+        "chair-covers": BY_SKU["CC-STD"],
+    }
+    for i, (slug, _t, name, _s) in enumerate(CATS, 1):
+        p = samples[slug]
+        kinds.append(
+            f'<a href="/mapot/{slug}/"><span class="mini">{plate_for(p, "idx"+slug, decorative=True)}</span>'
+            f'<span class="kind-no">{i:02d}</span><span class="kind-name">{esc(name)}</span>'
+            f'<span class="kind-meta">{esc(metas[slug])}</span></a>'
+        )
+    featured = [
+        ("TC-LINEN-3X3", "tile-a"),
+        ("TC-SATIN-22X22", "tile-b"),
+        ("TC-LINEN-ROUND", "tile-c"),
+        ("NP-SATIN", "tile-d"),
+        ("RN-STD", "tile-e"),
+        ("TC-FLORAL-*", "tile-f"),
+        ("TC-SATIN-15X3", "tile-g"),
+        ("CC-STD", "tile-h"),
+    ]
+    tiles = []
+    for sku, cls in featured:
+        p = BY_SKU[sku]
+        tiles.append(
+            f'<a class="tile {cls}" href="/mapot/catalog/{p["slug"]}/">'
+            f'{plate_for(p, "home"+p["sku"], decorative=True)}'
+            f'<span class="meta">{esc(" · ".join(x for x in (mat_name(p), p.get("size") or "") if x))}</span>'
+            f'<strong>{esc(p["name_he"])}</strong>'
+            f'<span class="price">{esc(price_label(p))}</span></a>'
+        )
+    toc = "".join(
+        f'<li><a href="{u}"><span class="no">{i:02d}</span><span class="nm">{esc(n)}</span><span class="go">לעמוד</span></a></li>'
+        for i, (u, n) in enumerate(EVENTS, 1)
+    )
+    body = f"""
+<section class="mast">
+<div class="mast-copy">
+<p class="kicker">מבית מכבסת היערה</p>
+<h1>השכרת מפות לעסקים ולמוסדות: {esc(B)}</h1>
+<p class="lede">{lede}</p>
+<div class="actions"><a class="btn" href="/mapot/catalog/">לקטלוג</a><a class="btn btn-ghost" href="{WA}">וואטסאפ {PH}</a></div>
+</div>
+<div class="mast-fig">{plate_for(hero, "mast", stage=True)}</div>
+</section>
+<nav class="kinds" aria-label="סוגי פריטים">{''.join(kinds)}</nav>
+<div class="folio">{''.join(tiles)}</div>
+<section class="essay">
+<div class="essay-body prose">{rest}</div>
+<div class="pull-col"><h2>נקי ומוכן לפריסה</h2><blockquote class="pull"><p>כל הזמנה מגיעה נקייה, והמפות מגיעות מגוהצות, מוכנות לפריסה.</p></blockquote></div>
+</section>
+<section>
+<h2>לפי סוג אירוע</h2>
+<ol class="toc">{toc}</ol>
+</section>
+"""
+    shell("/mapot/", pg["title"], pg["desc"], [], body, main_class="home")
+
+
+def category(url):
+    pg = PAGES[url]
+    slug = url.strip("/").split("/")[-1]
+    lede, rest = first_paragraph_and_rest(url)
+    prods = [p for p in PRODUCTS if CAT_BY_TYPE[p["type"]][0] == slug]
+    sample = prods[0]
+    h1 = re.search(r"^# (.+)", "\n".join(pg["lines"]), re.M).group(1).strip()
+    body = f"""
+<header class="page-head">
+<div>
+<p class="kicker">השכרה</p>
+<h1>{esc(h1)}</h1>
+<p class="lede">{lede}</p>
+</div>
+<div class="page-plate">{plate_for(sample, "cat"+slug, stage=True)}</div>
+</header>
+<div class="catalog-top"><p id="resultn" aria-live="polite"></p><button type="button" class="btn-ghost btn filter-open" id="openf" aria-expanded="false" aria-controls="filterpanel">סינון</button></div>
+{filter_bar(prods, lock=slug)}
+{grid(prods)}
+{close_layout()}
+<div class="prose">{rest}</div>
+<p><a class="btn" href="/mapot/catalog/">לכל הקטלוג</a></p>
+"""
+    extra = [
+        item_list(prods),
+        {
+            "@type": "Service",
+            "name": h1,
+            "serviceType": "השכרה",
+            "provider": {"@id": ORG_ID},
+            "url": ORIGIN + url,
+        },
+    ]
+    shell(url, pg["title"], pg["desc"], [("קטלוג", "/mapot/catalog/"), (pg["name"], url)], body, extra)
+
+
+def event_page(url):
+    pg = PAGES[url]
+    h1 = re.search(r"^# (.+)", "\n".join(pg["lines"]), re.M).group(1).strip()
+    lede, rest = first_paragraph_and_rest(url)
+    svg, w, h = plates.setting("ev" + url.strip("/").split("/")[-1])
+    fig = (
+        f'<figure class="fig fig-stage" style="--ar:{w}/{h}">'
+        f'<div class="frame">{svg}</div>'
+        f'<figcaption>{esc(plates.caption_for("setting", None, None))}</figcaption></figure>'
+    )
+    chips = "".join(f'<a class="btn btn-ghost" href="/mapot/{s}/">{esc(n)}</a>' for s, _t, n, _x in CATS)
+    body = f"""
+<header class="page-head">
+<div>
+<p class="kicker">לפי סוג אירוע</p>
+<h1>{esc(h1)}</h1>
+<p class="lede">{lede}</p>
+</div>
+<div class="page-plate">{fig}</div>
+</header>
+<div class="prose">{rest}</div>
+<div class="actions">{chips}</div>
+"""
+    extra = [{"@type": "Service", "name": h1, "provider": {"@id": ORG_ID}, "url": ORIGIN + url}]
+    shell(url, pg["title"], pg["desc"], [(pg["name"], url)], body, extra)
+
+
+def faq_pairs(lines):
+    pairs, q, buf = [], None, []
+
+    def flush():
+        nonlocal q, buf
+        if not q:
+            return
+        ans = strip_pending(" ".join(buf))
+        ans = re.sub(r"\s+", " ", ans).strip()
+        if q in FAQ_FIX and (not ans or "[ממתין לצבי]" in ans):
+            ans = FAQ_FIX[q]
+        ans = ans.replace(PH, PH)
+        if ans:
+            pairs.append((q, ans))
+        q, buf = None, []
+
+    for l in lines:
+        if l.startswith("## "):
+            flush()
+            q = l[3:].strip()
+            buf = []
+        elif l.startswith("# ") or l.startswith("**"):
+            continue
+        elif l.strip() and not l.startswith("("):
+            buf.append(l.strip())
+    flush()
+    return pairs
+
+
+def faq_page():
+    pg = PAGES["/mapot/faq/"]
+    h1 = re.search(r"^# (.+)", "\n".join(pg["lines"]), re.M).group(1).strip()
+    pairs = faq_pairs(pg["lines"])
+    blocks = [f"<h1>{esc(h1)}</h1>"]
+    for q, a in pairs:
+        blocks.append(f"<h2>{esc(q)}</h2><p>{inl(a)}</p>")
+    blocks.append(f'<p><a class="btn" href="/mapot/catalog/">לקטלוג ולהזמנה</a></p>')
+    shell("/mapot/faq/", pg["title"], pg["desc"], [("שאלות נפוצות", "/mapot/faq/")], "\n".join(blocks), [faq_ld(pairs)])
+
+
+def areas_page():
+    pg = PAGES["/mapot/service-areas/"]
+    h1 = re.search(r"^# (.+)", "\n".join(pg["lines"]), re.M).group(1).strip()
+    body = md2html(pg["lines"])
+    body = re.sub(r"^<h1>.*?</h1>", f"<h1>{esc(h1)}</h1>", body, count=1)
+    extra = [{
+        "@type": "Service",
+        "name": "השכרת מפות ומפיות",
+        "provider": {"@id": ORG_ID},
+        "areaServed": ["השרון", "גוש דן", "עוטף ירושלים", "ים המלח", "גוש עציון"],
+        "url": ORIGIN + "/mapot/service-areas/",
+    }]
+    shell("/mapot/service-areas/", pg["title"], pg["desc"], [("אזורי שירות", "/mapot/service-areas/")], f'<div class="prose">{body}</div><p><a class="btn" href="/mapot/catalog/">לקטלוג ולהזמנה</a></p>', extra)
+
+
+def catalog():
+    title = f"השכרת מפות, מפיות וראנרים | {B}"
+    desc = f"קטלוג {B}: השכרת מפות, מפיות, ראנרים וכיסויי כיסאות לעסקים ולמוסדות. בוחרים פריטים וכמויות ושולחים בקשת הזמנה. לקבלת הצעת מחיר."
+    body = f"""
+<header class="page-head">
+<div>
+<p class="kicker">היערה אירועים</p>
+<h1>השכרת מפות, מפיות, ראנרים וכיסויי כיסאות</h1>
+<p class="lede">בוחרים פריטים, מוסיפים להזמנה ושולחים. את הכמויות ואת המשלוח מאשרים איתכם בשיחה. {esc(price_label({'price': None}))}.</p>
+</div>
+</header>
+<div class="catalog-top"><p id="resultn" aria-live="polite"></p><button type="button" class="btn-ghost btn filter-open" id="openf" aria-expanded="false" aria-controls="filterpanel">סינון</button></div>
+{filter_bar(PRODUCTS)}
+{grid(PRODUCTS)}
+{close_layout()}
+"""
+    shell(
+        "/mapot/catalog/",
+        title,
+        desc,
+        [("קטלוג", "/mapot/catalog/")],
+        body,
+        [item_list(PRODUCTS)],
+    )
+
+
+def related(p):
+    same = [x for x in PRODUCTS if x["type"] == p["type"] and x["sku"] != p["sku"]]
+    others = [x for x in PRODUCTS if x["type"] != p["type"]]
+    pick = (same + others)[:3]
+    # Related cards stay undyed drawings: no color dots, so a chair page stays free of color swatches.
+    bits = []
+    for x in pick:
+        bits.append(
+            f'<a class="item" href="/mapot/catalog/{x["slug"]}/">'
+            f'{plate_for(x, "rel"+p["sku"]+x["sku"], decorative=True)}'
+            f'<strong>{esc(x["name_he"])}</strong>'
+            f'<span class="price">{esc(price_label(x))}</span></a>'
+        )
+    return f'<section class="related"><h2>עוד בקטלוג</h2><div class="related-grid">{"".join(bits)}</div></section>'
+
+
+def product_page(p):
+    t = TEMPLATES[TKEY[p["type"]]]
+    url = f"/mapot/catalog/{p['slug']}/"
+    title = f'{p["name_he"]} | {B}'
+    desc = blurb(p) + " לקבלת הצעת מחיר."
+    if len(desc) > 170:
+        desc = blurb(p)
+    specs = []
+    if mat_name(p):
+        specs.append(("בד", mat_name(p)))
+    if p.get("size"):
+        specs.append(("מידה", p["size"]))
+    specs.append(("מק״ט", p["sku"]))
+    specs.append(("מחיר", price_label(p)))
+    spec_html = "".join(f'<div class="spec"><span>{esc(k)}</span><b>{esc(v)}</b></div>' for k, v in specs)
+    sw = ""
+    if p["public_colors"]:
+        buttons = []
+        for i, c in enumerate(p["public_colors"]):
+            buttons.append(
+                f'<button type="button" class="swatch" role="radio" aria-checked="{"true" if i==0 else "false"}" '
+                f'aria-label="{esc(c["name"])}" data-color="{esc(c["key"])}" data-name="{esc(c["name"])}" '
+                f'data-hex="{esc(c["hex"])}" style="--sw:{esc(c["hex"])}"></button>'
+            )
+        first = p["public_colors"][0]["name"]
+        sw = (
+            f'<div class="swatches" role="radiogroup" aria-label="צבע">{"".join(buttons)}</div>'
+            f'<p class="chosen"><span class="sr">הצבע הנבחר</span> <span id="cname">{esc(first)}</span></p>'
+        )
+    min_qty = p.get("min_qty")
+    min_attr = int(min_qty) if isinstance(min_qty, int) and min_qty > 0 else 1
+    min_note = f'<p class="qty-note">כמות מינימלית: {min_attr}</p>' if isinstance(min_qty, int) and min_qty else ""
+    needs = "1" if p["public_colors"] else "0"
+    pts = "".join(f"<li>{esc(x)}</li>" for x in t["pts"])
+    pairs = product_faq(p)
+    faq_html = "".join(f"<h2>{esc(q)}</h2><p>{esc(a)}</p>" for q, a in pairs)
+    avail = '<p id="availnote" class="qty-note" aria-live="polite"></p>' if SHOW_AVAIL else ""
+    stage = plate_for(p, "stage" + p["sku"], stage=True)
+    if p["public_colors"]:
+        stage = stage.replace("--cloth:#f4efe4", "--cloth:" + p["public_colors"][0]["hex"], 1)
+    body = f"""
+<article class="product">
+<div class="stage-wrap">{stage}</div>
+<div class="buy">
+<p class="kicker">{esc(CAT_BY_TYPE[p['type']][1])}</p>
+<h1>{esc(p['name_he'])}</h1>
+<p class="price-lg">{esc(price_label(p))}</p>
+<div class="specs">{spec_html}</div>
+<p>{esc(blurb(p))}</p>
+{sw}
+{avail}
+<label class="qty-note" for="q">{esc(t['qty'])}</label>
+<div class="stepper"><button type="button" id="qdec" aria-label="הפחתת כמות">−</button><input id="q" type="number" min="{min_attr}" max="10000" value="{min_attr}" inputmode="numeric" aria-label="כמות"><button type="button" id="qinc" aria-label="הגדלת כמות">+</button></div>
+{min_note}
+<div class="actions"><button type="button" class="btn" id="add" data-sku="{esc(p['sku'])}" data-name="{esc(p['name_he'])}" data-needs-color="{needs}" data-min="{min_attr}">{esc(t['btn'])}</button></div>
+<p id="added" hidden role="status">נוסף לסל. <a href="/mapot/order/">לסל ההזמנה</a></p>
+<ul class="points">{pts}</ul>
+<p>אפשר גם בטלפון או בוואטסאפ: <a href="{WA}">{PH}</a></p>
+</div>
+</article>
+<section class="faq-block">{faq_html}</section>
+{related(p)}
+<noscript><p>להזמנה בטלפון או בוואטסאפ: <a href="{WA}">{PH}</a></p></noscript>
+"""
+    dock = f'''<div class="dock"><div><b>{esc(p["name_he"])}</b><span>{esc(price_label(p))}</span></div><button type="button" class="btn" id="adddock">{esc(t["btn"])}</button></div>'''
+    cat_slug, cat_name = CAT_BY_TYPE[p["type"]]
+    shell(
+        url,
+        title,
+        desc,
+        [("קטלוג", "/mapot/catalog/"), (cat_name, f"/mapot/{cat_slug}/"), (p["name_he"], url)],
+        body,
+        [product_ld(p), faq_ld(pairs)],
+        dock=dock,
+    )
+
+
+def order_page():
+    labels = ORDER_FIELDS["תוויות שדות"].split(" | ")
+    names = ["business", "contact", "phone", "email", "event_date", "address", "notes"]
+    types = ["text", "text", "tel", "email", "date", "text", "textarea"]
+    auto = ["organization", "name", "tel", "email", "off", "street-address", "off"]
+    req = {"contact", "phone", "event_date", "address"}
+    fields = []
+    for label, name, typ, ac in zip(labels, names, types, auto):
+        star = " *" if name in req else ""
+        req_attr = " required" if name in req else ""
+        if typ == "textarea":
+            control = f'<textarea id="f-{name}" name="{name}" maxlength="1000" autocomplete="{ac}"></textarea>'
+        else:
+            extra = ' inputmode="tel"' if name == "phone" else ""
+            if name == "contact":
+                extra += ' minlength="2"'
+            control = f'<input id="f-{name}" name="{name}" type="{typ}" maxlength="200" autocomplete="{ac}"{req_attr}{extra}>'
+        fields.append(f'<label for="f-{name}">{esc(label)}{star}{control}</label>')
+    body = f"""
+<h1>סל ההזמנה</h1>
+<p class="lede">{inl(ORDER_FIELDS['טקסט פתיחה'])}</p>
+<div id="empty" hidden><p>{inl(ORDER_FIELDS['סל ריק'])}</p><a class="btn" href="/mapot/catalog/">לקטלוג</a></div>
+<div class="order-grid" id="cartbox">
+<div><table class="lines" id="lines"></table></div>
+<form id="orderform" novalidate>
+<div class="fields">{''.join(fields)}</div>
+<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+<div class="actions"><button class="btn" type="submit">{esc(ORDER_FIELDS['כפתור'])}</button></div>
+<p id="err" class="err" role="alert" hidden></p>
+</form>
+</div>
+<div id="done" hidden tabindex="-1"><p>{inl(ORDER_FIELDS['הודעת אישור'])}</p></div>
+<noscript><p>אפשר להזמין בטלפון או בוואטסאפ: <a href="{WA}">{PH}</a></p></noscript>
+"""
+    shell("/mapot/order/", ORDER["title"], ORDER["desc"], [("סל ההזמנה", "/mapot/order/")], body, noindex=True)
+
+
+def write_assets():
+    os.makedirs(os.path.join(OUT, "assets", "fonts"), exist_ok=True)
+    os.makedirs(os.path.join(OUT, "media"), exist_ok=True)
+    for name in ("mapot.css", "cart.js"):
+        shutil.copy(os.path.join(R, name), os.path.join(OUT, "assets", name))
+    for name in ("heebo.woff2", "frank-ruhl-libre.woff2"):
+        shutil.copy(os.path.join(R, "fonts", name), os.path.join(OUT, "assets", "fonts", name))
+    seen = set()
+    for p in PRODUCTS:
+        for name in p["files"]:
+            if name in seen:
+                continue
+            seen.add(name)
+            shutil.copy(os.path.join(R, "photos", name), os.path.join(OUT, "media", name))
+
+
+def write_meta():
+    products_map = {}
+    for p in PRODUCTS:
+        products_map[p["sku"]] = {
+            "name": p["name_he"],
+            "slug": p["slug"],
+            "colors": [c["key"] for c in p["public_colors"]],
+            "color_names": {c["key"]: c["name"] for c in p["public_colors"]},
+        }
+    json.dump(products_map, open(os.path.join(OUT, "_products.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    redirects = {
+        "/services/tablecloth-rental.html": "/mapot/",
+        "/services/event-hall-tablecloth-rental.html": "/mapot/halls-catering/",
+        "/services/tablecloth-rental-jerusalem.html": "/mapot/service-areas/",
+        "/services/tablecloth-rental-gush-etzion.html": "/mapot/service-areas/",
+        "/services/tablecloth-rental-sharon.html": "/mapot/service-areas/",
+        "/services/table-linen.html": "/mapot/tablecloths/",
+        "/mapot/catalog/tablecloth-3x3/": "/mapot/catalog/tc-linen-3x3/",
+        "/mapot/catalog/tablecloths-example/": "/mapot/tablecloths/",
+        "/mapot/catalog/napkins-example/": "/mapot/napkins/",
+        "/mapot/catalog/runners-example/": "/mapot/runners/",
+        "/mapot/catalog/chair-covers-example/": "/mapot/chair-covers/",
+    }
+    json.dump(redirects, open(os.path.join(OUT, "_redirects.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    urls = []
+    seen = set()
+    for u in SITEMAP:
+        if u not in seen:
+            seen.add(u)
+            urls.append(u)
+    sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in urls:
+        sm.append(f"  <url><loc>{ORIGIN}{u}</loc></url>")
+    sm.append("</urlset>\n")
+    open(os.path.join(OUT, "sitemap.xml"), "w", encoding="utf-8").write("\n".join(sm))
+    if PREVIEW:
+        robots = "User-agent: *\nDisallow: /mapot/\n"
+    else:
+        robots = f"User-agent: *\nAllow: /mapot/\n\nSitemap: {ORIGIN}/mapot/sitemap.xml\n"
+    open(os.path.join(OUT, "robots.txt"), "w", encoding="utf-8").write(robots)
+    lines = [
+        f"# {B}",
+        "",
+        f"{B} הוא קו השכרה של {C['legal']} למפות, למפיות, לראנרים ולכיסויי כיסאות. הלקוחות הם אולמות, קייטרינג, מלונות, מסעדות, עסקים ומוסדות.",
+        "",
+        "מה משכירים: מפות מסאטן, מפשתן ומבד פרחים, במידות 1.5×1.5, 1.5×3, 2.2×2.2, 3×3, ומפה עגולה. מפיות מסאטן ומפשתן. ראנרים. כיסויי כיסאות. מפות זמינות גם לרכישה.",
+        "הפריטים מגיעים נקיים, והמפות מגיעות מגוהצות, מוכנות לפריסה. יש איסוף ומשלוח, וגם סבב קבוע לאולמות, למלונות ולקייטרינג.",
+        "",
+        f"הזמנה: באתר, דרך סל ההזמנה, או בטלפון ובוואטסאפ {PH}, או במייל {EMAIL}. את הכמויות ואת המשלוח מאשרים בשיחה. מחיר: לקבלת הצעת מחיר.",
+        f"כתובת: {C['street']}, {C['locality']}.",
+        "אזורי שירות: ריכוזי הערים החרדיות, השרון, גוש דן, עוטף ירושלים, ים המלח וגוש עציון.",
+        "",
+        "עמודים:",
+    ]
+    for u in urls:
+        lines.append(f"- {ORIGIN}{u}")
+    lines.append("")
+    open(os.path.join(OUT, "llms.txt"), "w", encoding="utf-8").write("\n".join(lines))
+
+
+def forbid():
+    bad_re = re.compile(r"מלאי|אנחנו לא|\[ממתין לצבי\]|תמונה תתווסף")
+    emoji = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F000-\U0001F9FF]")
+    hits = []
+    for dirpath, _, files in os.walk(OUT):
+        for fn in files:
+            if fn.startswith("_"):
+                continue
+            path = os.path.join(dirpath, fn)
+            if os.path.splitext(fn)[1].lower() not in {".html", ".css", ".js", ".txt", ".xml", ""}:
+                continue
+            text = open(path, encoding="utf-8", errors="replace").read()
+            if bad_re.search(text) or emoji.search(text):
+                hits.append(path)
+    if hits:
+        sys.exit("forbidden text in: " + ", ".join(hits))
+
+
+def main():
+    home()
+    for slug, _t, _n, _s in CATS:
+        category(f"/mapot/{slug}/")
+    for url, _n in EVENTS:
+        if url == "/mapot/halls-catering/":
+            event_page(url)
+        elif url in PAGES:
+            event_page(url)
+    faq_page()
+    areas_page()
+    catalog()
+    for p in PRODUCTS:
+        product_page(p)
+    order_page()
+    write_assets()
+    write_meta()
+    forbid()
+    print(f"{len(PRODUCTS)} products, {len(set(SITEMAP))} sitemap urls, colors={'on' if SHOW_COLORS else 'off'}, preview={PREVIEW}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,1 +1,17 @@
-{"brand": "היערה אירועים", "preview": true, "base": "https://hayahara.co.il/mapot/", "wa": "https://wa.me/972532535393", "phone": "053-2535393"}
+{
+  "brand": "היערה אירועים",
+  "legal": "מכבסת היערה בע״מ",
+  "parent": "מכבסת היערה",
+  "preview": true,
+  "show_placeholder_colors": true,
+  "show_availability": false,
+  "copy": "copy.md",
+  "base": "https://hayahara.co.il/mapot/",
+  "origin": "https://hayahara.co.il",
+  "wa": "https://wa.me/972532535393",
+  "phone": "053-2535393",
+  "phone_e164": "+972-53-2535393",
+  "email": "office@hayahara.co.il",
+  "street": "פרי גן 16",
+  "locality": "מישור אדומים"
+}

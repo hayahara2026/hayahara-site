@@ -4,5 +4,10 @@
  "/services/tablecloth-rental-jerusalem.html": "/mapot/service-areas/",
  "/services/tablecloth-rental-gush-etzion.html": "/mapot/service-areas/",
  "/services/tablecloth-rental-sharon.html": "/mapot/service-areas/",
- "/services/table-linen.html": "/mapot/tablecloths/"
+ "/services/table-linen.html": "/mapot/tablecloths/",
+ "/mapot/catalog/tablecloth-3x3/": "/mapot/catalog/tc-linen-3x3/",
+ "/mapot/catalog/tablecloths-example/": "/mapot/tablecloths/",
+ "/mapot/catalog/napkins-example/": "/mapot/napkins/",
+ "/mapot/catalog/runners-example/": "/mapot/runners/",
+ "/mapot/catalog/chair-covers-example/": "/mapot/chair-covers/"
 }

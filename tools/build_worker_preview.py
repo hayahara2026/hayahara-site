@@ -1,10 +1,10 @@
 import json,mimetypes,os,base64,subprocess
-mimetypes.add_type('text/plain','.txt');mimetypes.add_type('application/manifest+json','.webmanifest');mimetypes.add_type('image/webp','.webp');mimetypes.add_type('image/svg+xml','.svg')
+mimetypes.add_type('text/plain','.txt');mimetypes.add_type('application/manifest+json','.webmanifest');mimetypes.add_type('image/webp','.webp');mimetypes.add_type('image/svg+xml','.svg');mimetypes.add_type('font/woff2','.woff2')
 root='hayahara-site';F={}
 for r,ds,fs in os.walk(root):
   ds[:]=[d for d in ds if d!='.git']
   for f in fs:
-    if f in('CNAME','README.md') or r.startswith(root+'/mapot-src') or (r==root+'/mapot' and (f.startswith('_') or f.endswith('.txt'))):continue
+    if f in('CNAME','README.md') or r.startswith(root+'/mapot-src') or r.startswith(root+'/docs') or r.startswith(root+'/tests') or (r==root+'/mapot' and f.startswith('_')):continue
     p=os.path.join(r,f)[len(root):]
     t=mimetypes.guess_type(f)[0] or 'application/octet-stream'
     if t.startswith('text/') or t in('application/xml','application/json','application/manifest+json','image/svg+xml','application/javascript'): t+='; charset=utf-8'

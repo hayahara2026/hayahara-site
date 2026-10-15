@@ -1,18 +1,247 @@
-(function(){var K='mapot_cart';function get(){try{return JSON.parse(localStorage.getItem(K))||[]}catch(e){return[]}}function set(c){localStorage.setItem(K,JSON.stringify(c));cnt()}
-function cnt(){var n=document.getElementById('cartn');if(n)n.textContent=get().reduce(function(a,i){return a+i.qty},0)}
-function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
-document.addEventListener('DOMContentLoaded',function(){cnt();
-var ft=document.getElementById('ft'),fs=document.getElementById('fs');function flt(){document.querySelectorAll('#grid .card').forEach(function(c){c.hidden=(ft.value&&c.dataset.type!==ft.value)||(fs.value&&c.dataset.size!==fs.value)})}
-if(ft){ft.onchange=flt;fs.onchange=flt;var u=new URLSearchParams(location.search);if(u.get('type')){ft.value=u.get('type');flt()}}
-var add=document.getElementById('add');if(add)add.onclick=function(){var q=parseInt(document.getElementById('q').value,10);if(!(q>=1&&q<=10000))return;var c=get(),s=add.dataset.slug,f=c.find(function(i){return i.slug===s});if(f)f.qty=Math.min(10000,f.qty+q);else c.push({slug:s,name:add.dataset.name,qty:q});set(c);document.getElementById('added').hidden=false};
-var form=document.getElementById('orderform');if(!form)return;
-function draw(){var c=get(),t=document.getElementById('cart');document.getElementById('empty').hidden=c.length>0;document.getElementById('cartbox').hidden=c.length===0;
-t.innerHTML='<tr><th>פריט</th><th>כמות</th><th></th></tr>'+c.map(function(i,k){return '<tr><td>'+esc(i.name)+'</td><td><input type="number" min="1" max="10000" value="'+i.qty+'" data-k="'+k+'"></td><td><button type="button" data-r="'+k+'">הסרה</button></td></tr>'}).join('');
-t.querySelectorAll('input').forEach(function(x){x.onchange=function(){var c=get(),v=parseInt(x.value,10);if(v>=1&&v<=10000){c[x.dataset.k].qty=v;set(c)}}});
-t.querySelectorAll('button').forEach(function(b){b.onclick=function(){var c=get();c.splice(b.dataset.r,1);set(c);draw()}})}
-draw();
-form.onsubmit=function(e){e.preventDefault();var err=document.getElementById('err');err.hidden=true;if(!form.checkValidity()){err.textContent='נא למלא איש קשר, טלפון תקין, תאריך אירוע וכתובת למשלוח.';err.hidden=false;return}
-var d={};new FormData(form).forEach(function(v,k){d[k]=v});d.items=get().map(function(i){return{slug:i.slug,qty:i.qty}});
-var b=form.querySelector('button[type=submit]');b.disabled=true;
-fetch('/mapot/api/order',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)}).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})}).then(function(r){b.disabled=false;
-if(r.ok){localStorage.removeItem(K);cnt();document.getElementById('cartbox').hidden=true;document.getElementById('done').hidden=false}else{err.textContent=r.j.error||'משהו השתבש. אפשר להתקשר: 053-2535393';err.hidden=false}}).catch(function(){b.disabled=false;err.textContent='משהו השתבש. אפשר להתקשר: 053-2535393';err.hidden=false})}})})();
+(function(){
+ var K='mapot_cart_v2';
+ function get(){try{return JSON.parse(localStorage.getItem(K))||[]}catch(e){return[]}}
+ function set(c){localStorage.setItem(K,JSON.stringify(c));cnt()}
+ function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML}
+ function cnt(){
+  var n=document.getElementById('cartn');
+  var total=get().reduce(function(a,i){return a+(i.qty||0)},0);
+  if(n)n.textContent=String(total);
+ }
+ function selectedSwatch(){return document.querySelector('.swatch[aria-checked="true"]')}
+ function clampQty(v,min,max){v=parseInt(v,10);if(!(v>=min))v=min;if(v>max)v=max;return v}
+
+ function bindMenu(){
+  var toggle=document.getElementById('navtoggle'),nav=document.getElementById('sitenav');
+  if(!toggle||!nav)return;
+  toggle.addEventListener('click',function(){
+   var open=nav.classList.toggle('open');
+   toggle.setAttribute('aria-expanded',open?'true':'false');
+   toggle.textContent=open?'סגירה':'תפריט';
+   document.body.classList.toggle('nav-open',open);
+  });
+ }
+
+ function bindFilters(){
+  var root=document.getElementById('filters');
+  var grid=document.getElementById('grid');
+  if(!root||!grid)return;
+  var lock=root.dataset.lock||'';
+  var state={type:lock,size:'',fabric:'',color:''};
+  var params=new URLSearchParams(location.search);
+  ['size','fabric','color'].forEach(function(k){if(params.get(k))state[k]=params.get(k)});
+  if(!lock&&params.get('type'))state.type=params.get('type');
+
+  function paint(){
+   root.querySelectorAll('[data-filter]').forEach(function(b){
+    var on=(state[b.dataset.filter]||'')===b.dataset.value;
+    b.setAttribute('aria-pressed',on?'true':'false');
+   });
+   var n=0,active=0;
+   ['size','fabric','color'].forEach(function(k){if(state[k])active++});
+   if(!lock&&state.type)active++;
+   grid.querySelectorAll('.item').forEach(function(el){
+    var ok=true;
+    if(state.type&&el.dataset.type!==state.type)ok=false;
+    if(state.size&&el.dataset.size!==state.size)ok=false;
+    if(state.fabric&&el.dataset.fabric!==state.fabric)ok=false;
+    if(state.color&&el.dataset.colors.split(/\s+/).indexOf(state.color)<0)ok=false;
+    el.hidden=!ok;
+    if(ok)n++;
+   });
+   var live=document.getElementById('resultn');
+   if(live)live.textContent=n?(n===1?'פריט אחד':n+' פריטים'):'לבחירה הזו אין פריטים';
+   var empty=document.getElementById('emptyf');
+   if(empty)empty.hidden=n>0;
+   var open=document.getElementById('openf');
+   if(open)open.textContent=active?('סינון · '+active):'סינון';
+   var q=new URLSearchParams();
+   if(!lock&&state.type)q.set('type',state.type);
+   if(state.size)q.set('size',state.size);
+   if(state.fabric)q.set('fabric',state.fabric);
+   if(state.color)q.set('color',state.color);
+   var next=q.toString();
+   history.replaceState(null,'',next?('?'+next):location.pathname);
+  }
+  root.addEventListener('click',function(e){
+   var b=e.target.closest('[data-filter]');
+   if(!b||!root.contains(b))return;
+   var k=b.dataset.filter,v=b.dataset.value;
+   state[k]=state[k]===v?'':v;
+   if(lock)state.type=lock;
+   paint();
+  });
+  var reset=document.getElementById('resetf');
+  if(reset)reset.addEventListener('click',function(){
+   state={type:lock,size:'',fabric:'',color:''};
+   paint();
+  });
+  var panel=document.getElementById('filterpanel');
+  var opener=document.getElementById('openf');
+  var closer=document.getElementById('closef');
+  function setOpen(on){
+   if(!panel)return;
+   panel.classList.toggle('open',on);
+   if(opener)opener.setAttribute('aria-expanded',on?'true':'false');
+   document.body.classList.toggle('filters-open',on);
+   var desktop=window.matchMedia('(min-width:960px)').matches;
+   panel.inert=!desktop&&!on;
+   if(on&&closer)closer.focus();
+  }
+  if(opener)opener.addEventListener('click',function(){setOpen(true)});
+  if(closer)closer.addEventListener('click',function(){setOpen(false)});
+  document.addEventListener('keydown',function(e){
+   if(e.key==='Escape'&&panel&&panel.classList.contains('open'))setOpen(false);
+  });
+  var mq=window.matchMedia('(min-width:960px)');
+  function syncInert(){if(panel)panel.inert=!mq.matches&&!panel.classList.contains('open')}
+  if(mq.addEventListener)mq.addEventListener('change',syncInert);
+  syncInert();
+  paint();
+ }
+
+ function bindProduct(){
+  var add=document.getElementById('add');
+  if(!add)return;
+  var q=document.getElementById('q');
+  var min=parseInt(add.dataset.min||'1',10)||1;
+  var max=10000;
+  function curMax(){var m=parseInt(q&&q.max,10);return m>=1?m:max}
+  document.querySelectorAll('.swatch').forEach(function(b){
+   b.addEventListener('click',function(){
+    document.querySelectorAll('.swatch').forEach(function(x){x.setAttribute('aria-checked','false')});
+    b.setAttribute('aria-checked','true');
+    var stage=document.getElementById('stage');
+    if(stage)stage.style.setProperty('--cloth',b.dataset.hex);
+    var name=document.getElementById('cname');
+    if(name)name.textContent=b.dataset.name;
+    refreshAvail();
+   });
+  });
+  var dec=document.getElementById('qdec'),inc=document.getElementById('qinc');
+  if(dec)dec.addEventListener('click',function(){if(q)q.value=clampQty((parseInt(q.value,10)||min)-1,min,curMax())});
+  if(inc)inc.addEventListener('click',function(){if(q)q.value=clampQty((parseInt(q.value,10)||min)+1,min,curMax())});
+  function addOne(){
+   var qty=clampQty(q?q.value:1,min,curMax());
+   if(q)q.value=qty;
+   var sw=selectedSwatch();
+   var needs=add.dataset.needsColor==='1';
+   if(needs&&!sw)return;
+   var color=sw?sw.dataset.color:'';
+   var colorName=sw?sw.dataset.name:'';
+   var colorHex=sw?sw.dataset.hex:'';
+   var c=get();
+   var f=c.find(function(i){return i.sku===add.dataset.sku&&(i.color||'')===color});
+   if(f)f.qty=Math.min(curMax(),f.qty+qty);
+   else c.push({sku:add.dataset.sku,name:add.dataset.name,color:color,colorName:colorName,colorHex:colorHex,qty:qty});
+   set(c);
+   var note=document.getElementById('added');
+   if(note){note.hidden=false}
+  }
+  add.addEventListener('click',addOne);
+  var dock=document.getElementById('adddock');
+  if(dock)dock.addEventListener('click',addOne);
+  refreshAvail();
+ }
+
+ function refreshAvail(){
+  if(document.documentElement.dataset.avail!=='1')return;
+  var add=document.getElementById('add');
+  var note=document.getElementById('availnote');
+  var input=document.getElementById('q');
+  if(!add)return;
+  var sw=selectedSwatch();
+  var qs=new URLSearchParams({sku:add.dataset.sku});
+  if(sw&&sw.dataset.color)qs.set('color',sw.dataset.color);
+  fetch('/mapot/api/availability?'+qs.toString()).then(function(r){return r.json()}).then(function(j){
+   if(!j||j.available==null||typeof j.available!=='number'){
+    if(note)note.textContent='';
+    if(input)input.max=10000;
+    return;
+   }
+   if(note)note.textContent='ניתן להזמין עד '+j.available;
+   if(input){
+    input.max=String(j.available);
+    if(parseInt(input.value,10)>j.available)input.value=String(j.available);
+   }
+  }).catch(function(){if(note)note.textContent=''});
+ }
+
+ function drawCart(){
+  var form=document.getElementById('orderform');
+  if(!form)return;
+  var c=get();
+  var empty=document.getElementById('empty');
+  var box=document.getElementById('cartbox');
+  var t=document.getElementById('lines');
+  if(empty)empty.hidden=c.length>0;
+  if(box)box.hidden=c.length===0;
+  if(!t)return;
+  t.innerHTML=c.map(function(i,k){
+   var dot=i.colorHex?'<span class="linedot" style="--sw:'+esc(i.colorHex)+'" aria-hidden="true"></span>':'';
+   var col=i.colorName?'<span class="linecolor">'+esc(i.colorName)+'</span>':'';
+   return '<tr><td>'+dot+'<span class="linename">'+esc(i.name)+'</span>'+col+'</td>'
+    +'<td><div class="stepper"><button type="button" data-dec="'+k+'" aria-label="הפחתת כמות">−</button>'
+    +'<input type="number" min="1" max="10000" value="'+i.qty+'" data-k="'+k+'" aria-label="כמות">'
+    +'<button type="button" data-inc="'+k+'" aria-label="הגדלת כמות">+</button></div></td>'
+    +'<td><button type="button" data-r="'+k+'">הסרה</button></td></tr>';
+  }).join('');
+  t.querySelectorAll('input').forEach(function(x){
+   x.addEventListener('change',function(){
+    var cart=get(),v=parseInt(x.value,10);
+    if(v>=1&&v<=10000){cart[x.dataset.k].qty=v;set(cart);drawCart()}
+   });
+  });
+  t.querySelectorAll('[data-r]').forEach(function(b){
+   b.addEventListener('click',function(){var cart=get();cart.splice(+b.dataset.r,1);set(cart);drawCart()});
+  });
+  t.querySelectorAll('[data-dec]').forEach(function(b){
+   b.addEventListener('click',function(){var cart=get(),i=cart[+b.dataset.dec];if(i.qty>1){i.qty--;set(cart);drawCart()}});
+  });
+  t.querySelectorAll('[data-inc]').forEach(function(b){
+   b.addEventListener('click',function(){var cart=get(),i=cart[+b.dataset.inc];if(i.qty<10000){i.qty++;set(cart);drawCart()}});
+  });
+ }
+
+ function bindOrder(){
+  var form=document.getElementById('orderform');
+  if(!form)return;
+  drawCart();
+  form.addEventListener('submit',function(e){
+   e.preventDefault();
+   var err=document.getElementById('err');
+   err.hidden=true;
+   if(!get().length){err.textContent='הסל מחכה לפריט הראשון.';err.hidden=false;return}
+   if(!form.checkValidity()){err.textContent='נא למלא איש קשר, טלפון תקין, תאריך אירוע וכתובת למשלוח.';err.hidden=false;return}
+   var d={};
+   new FormData(form).forEach(function(v,k){d[k]=v});
+   d.items=get().map(function(i){return{sku:i.sku,color:i.color||'',qty:i.qty}});
+   var b=form.querySelector('button[type=submit]');
+   b.disabled=true;
+   fetch('/mapot/api/order',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)})
+    .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})
+    .then(function(r){
+     b.disabled=false;
+     if(r.ok&&r.j&&r.j.ok){
+      localStorage.removeItem(K);cnt();
+      document.getElementById('cartbox').hidden=true;
+      var done=document.getElementById('done');
+      done.hidden=false;
+      done.focus();
+     }else{
+      err.textContent=(r.j&&r.j.error)||'משהו השתבש. אפשר להתקשר: 053-2535393';
+      err.hidden=false;
+     }
+    })
+    .catch(function(){b.disabled=false;err.textContent='משהו השתבש. אפשר להתקשר: 053-2535393';err.hidden=false});
+  });
+ }
+
+ document.addEventListener('DOMContentLoaded',function(){
+  cnt();
+  bindMenu();
+  bindFilters();
+  bindProduct();
+  bindOrder();
+ });
+})();
