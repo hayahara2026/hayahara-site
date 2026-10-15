@@ -221,16 +221,37 @@ def blurb(prod):
 
 
 def alt_text(prod):
-    fab = mat_name(prod)
-    size = prod.get("size") or ""
-    if prod["type"] == "tablecloth":
-        bits = ["שרטוט מפה", size, fab]
-        return " ".join(x for x in bits if x)
-    if prod["type"] == "napkin":
-        return " ".join(x for x in ("שרטוט מפית מקופלת", fab) if x)
-    if prod["type"] == "runner":
-        return " ".join(x for x in ("שרטוט ראנר", fab) if x)
-    return "שרטוט כיסוי כיסא"
+    return prod["name_he"]
+
+
+# Display color for the code-rendered cloth. Not a catalog fact: every swatch stays available.
+ACCENT = {
+    "TC-SATIN-15X15": "c10",
+    "TC-SATIN-15X3": "c04",
+    "TC-SATIN-22X22": "c08",
+    "TC-SATIN-3X3": "c03",
+    "TC-SATIN-ROUND": "c09",
+    "TC-LINEN-15X15": "c02",
+    "TC-LINEN-15X3": "c06",
+    "TC-LINEN-22X22": "c01",
+    "TC-LINEN-3X3": "c10",
+    "TC-LINEN-ROUND": "c08",
+    "NP-SATIN": "c07",
+    "NP-LINEN": "c09",
+    "RN-STD": "c08",
+    "TC-FLORAL-*": "c03",
+}
+
+
+def accent_of(p):
+    cols = p["public_colors"]
+    if not cols or p["type"] == "chair_cover":
+        return None
+    key = ACCENT.get(p["sku"])
+    for col in cols:
+        if col["key"] == key:
+            return col
+    return cols[0]
 
 
 def kind_of(prod):
@@ -411,7 +432,7 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
         bits = []
         for i, (n, u) in enumerate(cr):
             if i:
-                bits.append('<span aria-hidden="true">/</span>')
+                bits.append('<span class="sep" aria-hidden="true">/</span>')
             if i == len(cr) - 1:
                 bits.append(f"<span>{esc(n)}</span>")
             else:
@@ -454,7 +475,7 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
 <a class="brand" href="/mapot/"><b>{esc(B)}</b><small>מבית מכבסת היערה</small></a>
 <nav class="site-nav" id="sitenav" aria-label="ראשי">{''.join(nav)}</nav>
 <div class="tools">
-<a class="cartlink" href="/mapot/order/">סל ההזמנה <span id="cartn" aria-live="polite">0</span></a>
+<a class="cartlink" href="/mapot/order/"><span class="cartlabel">סל ההזמנה</span><span id="cartn" class="badge" aria-live="polite">0</span></a>
 <button type="button" class="nav-toggle" id="navtoggle" aria-expanded="false" aria-controls="sitenav">תפריט</button>
 </div>
 </header>
@@ -484,7 +505,7 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
             SITEMAP.append(url)
 
 
-def plate_for(p, uid, stage=False, decorative=False):
+def plate_for(p, uid, stage=False, dyed=True, hero=False):
     if p["files"]:
         imgs = []
         for i, name in enumerate(p["files"]):
@@ -492,46 +513,32 @@ def plate_for(p, uid, stage=False, decorative=False):
             alt_attr = f' alt="{esc(alt)}"' if alt else ' alt=""'
             imgs.append(f'<img src="/mapot/media/{esc(name)}"{alt_attr}>')
         cls = "fig fig-photo fig-stage" if stage else "fig fig-photo"
-        return f'<figure class="{cls}"><div class="frame">{"".join(imgs)}</div></figure>'
-    svg, w, h = plates.draw(kind_of(p), fabric_code(p) or None, p.get("size"), uid, stage)
-    if decorative:
-        svg = svg.replace('role="img"', 'aria-hidden="true" focusable="false"', 1)
-        svg = re.sub(r'\saria-label="[^"]*"', "", svg, count=1)
-    cap = plates.caption_for(kind_of(p), fabric_code(p) or None, p.get("size"))
-    cap_attr = ' aria-hidden="true"' if decorative else ""
-    ident = ' id="stage"' if stage else ""
-    cls = "fig fig-stage" if stage else "fig"
-    return (
-        f'<figure class="{cls}"{ident} style="--ar:{w}/{h};--cloth:#f4efe4">'
-        f'<div class="frame">{svg}</div>'
-        f"<figcaption{cap_attr}>{esc(cap)}</figcaption></figure>"
+        ident = ' id="stage"' if stage else ""
+        return f'<figure class="{cls}"{ident}><div class="frame">{"".join(imgs)}</div></figure>'
+    col = accent_of(p) if dyed else None
+    return plates.render(
+        kind_of(p),
+        fabric_code(p) or None,
+        p.get("size"),
+        uid,
+        stage=stage,
+        hero=hero,
+        cloth=(col["hex"] if col else None),
     )
-
-
-def color_dots(p):
-    if not p["public_colors"]:
-        return ""
-    dots = "".join(
-        f'<i style="--sw:{esc(c["hex"])}"></i>' for c in p["public_colors"]
-    )
-    return f'<span class="dots" aria-hidden="true">{dots}</span>'
 
 
 def card(p, cls=""):
     cat = CAT_BY_TYPE[p["type"]][0]
-    kicker_bits = [x for x in (mat_name(p), p.get("size") or "") if x]
     colors = " ".join(c["key"] for c in p["public_colors"])
     klass = "item" + ((" " + cls) if cls else "")
-    if p["type"] == "runner":
-        klass += " item-runner"
+    if p["type"] == "runner" or p.get("size") == "1.5×3":
+        klass += " item-wide"
     return (
         f'<a class="{klass}" href="/mapot/catalog/{p["slug"]}/" data-type="{cat}" '
         f'data-size="{esc(p.get("size") or "")}" data-fabric="{esc(fabric_code(p))}" data-colors="{esc(colors)}">'
-        f'{plate_for(p, "card"+p["sku"], decorative=True)}'
-        f'<span class="k">{esc(" · ".join(kicker_bits))}</span>'
+        f'{plate_for(p, "card"+p["sku"])}'
         f'<strong>{esc(p["name_he"])}</strong>'
         f'<span class="price">{esc(price_label(p))}</span>'
-        f'{color_dots(p)}'
         f"</a>"
     )
 
@@ -642,16 +649,9 @@ def home():
         "runners": "קו עיצובי לשולחן",
         "chair-covers": "מראה אחיד לאולם",
     }
-    samples = {
-        "tablecloths": BY_SKU["TC-LINEN-3X3"],
-        "napkins": BY_SKU["NP-LINEN"],
-        "runners": BY_SKU["RN-STD"],
-        "chair-covers": BY_SKU["CC-STD"],
-    }
     for i, (slug, _t, name, _s) in enumerate(CATS, 1):
-        p = samples[slug]
         kinds.append(
-            f'<a href="/mapot/{slug}/"><span class="mini">{plate_for(p, "idx"+slug, decorative=True)}</span>'
+            f'<a href="/mapot/{slug}/">'
             f'<span class="kind-no">{i:02d}</span><span class="kind-name">{esc(name)}</span>'
             f'<span class="kind-meta">{esc(metas[slug])}</span></a>'
         )
@@ -670,8 +670,7 @@ def home():
         p = BY_SKU[sku]
         tiles.append(
             f'<a class="tile {cls}" href="/mapot/catalog/{p["slug"]}/">'
-            f'{plate_for(p, "home"+p["sku"], decorative=True)}'
-            f'<span class="meta">{esc(" · ".join(x for x in (mat_name(p), p.get("size") or "") if x))}</span>'
+            f'{plate_for(p, "home"+p["sku"])}'
             f'<strong>{esc(p["name_he"])}</strong>'
             f'<span class="price">{esc(price_label(p))}</span></a>'
         )
@@ -681,13 +680,15 @@ def home():
     )
     body = f"""
 <section class="mast">
+<div class="mast-title">
+<p class="kicker">{esc(B)} · מבית מכבסת היערה</p>
+<h1 class="display">השכרת מפות<br>לעסקים ולמוסדות</h1>
+</div>
 <div class="mast-copy">
-<p class="kicker">מבית מכבסת היערה</p>
-<h1>השכרת מפות לעסקים ולמוסדות: {esc(B)}</h1>
 <p class="lede">{lede}</p>
 <div class="actions"><a class="btn" href="/mapot/catalog/">לקטלוג</a><a class="btn btn-ghost" href="{WA}">וואטסאפ {PH}</a></div>
 </div>
-<div class="mast-fig">{plate_for(hero, "mast", stage=True)}</div>
+<div class="mast-fig">{plate_for(hero, "mast", stage=True, hero=True)}</div>
 </section>
 <nav class="kinds" aria-label="סוגי פריטים">{''.join(kinds)}</nav>
 <div class="folio">{''.join(tiles)}</div>
@@ -717,7 +718,7 @@ def category(url):
 <h1>{esc(h1)}</h1>
 <p class="lede">{lede}</p>
 </div>
-<div class="page-plate">{plate_for(sample, "cat"+slug, stage=True)}</div>
+<div class="page-plate">{plate_for(sample, "cat"+slug, stage=True, hero=True)}</div>
 </header>
 <div class="catalog-top"><p id="resultn" aria-live="polite"></p><button type="button" class="btn-ghost btn filter-open" id="openf" aria-expanded="false" aria-controls="filterpanel">סינון</button></div>
 {filter_bar(prods, lock=slug)}
@@ -743,12 +744,15 @@ def event_page(url):
     pg = PAGES[url]
     h1 = re.search(r"^# (.+)", "\n".join(pg["lines"]), re.M).group(1).strip()
     lede, rest = first_paragraph_and_rest(url)
-    svg, w, h = plates.setting("ev" + url.strip("/").split("/")[-1])
-    fig = (
-        f'<figure class="fig fig-stage" style="--ar:{w}/{h}">'
-        f'<div class="frame">{svg}</div>'
-        f'<figcaption>{esc(plates.caption_for("setting", None, None))}</figcaption></figure>'
-    )
+    slug = url.strip("/").split("/")[-1]
+    event_cloth = {
+        "wedding": "#6d2428",
+        "bar-mitzvah": "#243044",
+        "brit": "#3e4a38",
+        "sheva-brachot": "#8a5a32",
+        "halls-catering": "#6d2428",
+    }.get(slug, "#6d2428")
+    fig = plates.render("setting", "linen", None, "ev" + slug, stage=True, hero=True, cloth=event_cloth)
     chips = "".join(f'<a class="btn btn-ghost" href="/mapot/{s}/">{esc(n)}</a>' for s, _t, n, _x in CATS)
     body = f"""
 <header class="page-head">
@@ -851,12 +855,13 @@ def related(p):
     same = [x for x in PRODUCTS if x["type"] == p["type"] and x["sku"] != p["sku"]]
     others = [x for x in PRODUCTS if x["type"] != p["type"]]
     pick = (same + others)[:3]
-    # Related cards stay undyed drawings: no color dots, so a chair page stays free of color swatches.
+    # A chair page must not carry palette hex, so its related scenes stay undyed.
+    dyed = p["type"] != "chair_cover"
     bits = []
     for x in pick:
         bits.append(
             f'<a class="item" href="/mapot/catalog/{x["slug"]}/">'
-            f'{plate_for(x, "rel"+p["sku"]+x["sku"], decorative=True)}'
+            f'{plate_for(x, "rel"+p["sku"]+x["sku"], dyed=dyed)}'
             f'<strong>{esc(x["name_he"])}</strong>'
             f'<span class="price">{esc(price_label(x))}</span></a>'
         )
@@ -879,15 +884,17 @@ def product_page(p):
     specs.append(("מחיר", price_label(p)))
     spec_html = "".join(f'<div class="spec"><span>{esc(k)}</span><b>{esc(v)}</b></div>' for k, v in specs)
     sw = ""
+    accent = accent_of(p)
     if p["public_colors"]:
         buttons = []
-        for i, c in enumerate(p["public_colors"]):
+        for c in p["public_colors"]:
+            on = accent and c["key"] == accent["key"]
             buttons.append(
-                f'<button type="button" class="swatch" role="radio" aria-checked="{"true" if i==0 else "false"}" '
+                f'<button type="button" class="swatch" role="radio" aria-checked="{"true" if on else "false"}" '
                 f'aria-label="{esc(c["name"])}" data-color="{esc(c["key"])}" data-name="{esc(c["name"])}" '
                 f'data-hex="{esc(c["hex"])}" style="--sw:{esc(c["hex"])}"></button>'
             )
-        first = p["public_colors"][0]["name"]
+        first = accent["name"] if accent else p["public_colors"][0]["name"]
         sw = (
             f'<div class="swatches" role="radiogroup" aria-label="צבע">{"".join(buttons)}</div>'
             f'<p class="chosen"><span class="sr">הצבע הנבחר</span> <span id="cname">{esc(first)}</span></p>'
@@ -900,9 +907,7 @@ def product_page(p):
     pairs = product_faq(p)
     faq_html = "".join(f"<h2>{esc(q)}</h2><p>{esc(a)}</p>" for q, a in pairs)
     avail = '<p id="availnote" class="qty-note" aria-live="polite"></p>' if SHOW_AVAIL else ""
-    stage = plate_for(p, "stage" + p["sku"], stage=True)
-    if p["public_colors"]:
-        stage = stage.replace("--cloth:#f4efe4", "--cloth:" + p["public_colors"][0]["hex"], 1)
+    stage = plate_for(p, "stage" + p["sku"], stage=True, hero=True)
     body = f"""
 <article class="product">
 <div class="stage-wrap">{stage}</div>
@@ -940,14 +945,39 @@ def product_page(p):
     )
 
 
+MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"]
+
+
+def date_field(label):
+    days = '<option value="">יום</option>' + "".join(
+        f'<option value="{d:02d}">{d}</option>' for d in range(1, 32)
+    )
+    months = '<option value="">חודש</option>' + "".join(
+        f'<option value="{i:02d}">{esc(name)}</option>' for i, name in enumerate(MONTHS_HE, 1)
+    )
+    years = '<option value="">שנה</option>' + "".join(
+        f'<option value="{y}">{y}</option>' for y in range(2026, 2033)
+    )
+    return (
+        f'<fieldset class="datefield"><legend>{esc(label)} *</legend><div class="dateparts">'
+        f'<label class="sr" for="f-day">יום</label><select id="f-day" required>{days}</select>'
+        f'<label class="sr" for="f-month">חודש</label><select id="f-month" required>{months}</select>'
+        f'<label class="sr" for="f-year">שנה</label><select id="f-year" required>{years}</select>'
+        f'</div><input id="f-event_date" name="event_date" type="hidden" value="" required></fieldset>'
+    )
+
+
 def order_page():
     labels = ORDER_FIELDS["תוויות שדות"].split(" | ")
     names = ["business", "contact", "phone", "email", "event_date", "address", "notes"]
-    types = ["text", "text", "tel", "email", "date", "text", "textarea"]
+    types = ["text", "text", "tel", "email", "text", "text", "textarea"]
     auto = ["organization", "name", "tel", "email", "off", "street-address", "off"]
-    req = {"contact", "phone", "event_date", "address"}
+    req = {"contact", "phone", "address"}
     fields = []
     for label, name, typ, ac in zip(labels, names, types, auto):
+        if name == "event_date":
+            fields.append(date_field(label))
+            continue
         star = " *" if name in req else ""
         req_attr = " required" if name in req else ""
         if typ == "textarea":
@@ -966,7 +996,7 @@ def order_page():
 <div><table class="lines" id="lines"></table></div>
 <form id="orderform" novalidate>
 <div class="fields">{''.join(fields)}</div>
-<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+<div class="hp"><label for="hp-site">השאר ריק</label><input id="hp-site" name="website" tabindex="-1" autocomplete="off" value=""></div>
 <div class="actions"><button class="btn" type="submit">{esc(ORDER_FIELDS['כפתור'])}</button></div>
 <p id="err" class="err" role="alert" hidden></p>
 </form>
@@ -1054,7 +1084,7 @@ def write_meta():
 
 
 def forbid():
-    bad_re = re.compile(r"מלאי|אנחנו לא|\[ממתין לצבי\]|תמונה תתווסף")
+    bad_re = re.compile(r"מלאי|אנחנו לא|\[ממתין לצבי\]|תמונה תתווסף|שרטוט|Website")
     emoji = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F000-\U0001F9FF]")
     hits = []
     for dirpath, _, files in os.walk(OUT):

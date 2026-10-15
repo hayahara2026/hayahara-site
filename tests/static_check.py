@@ -145,6 +145,24 @@ if 'data-avail="1"' in home:
 if "id=\"availnote\"" in (SITE / "catalog" / "tc-linen-3x3" / "index.html").read_text(encoding="utf-8"):
     bad("availability note is rendered while the flag is off")
 
+for path, text in public_text:
+    if "שרטוט" in text:
+        bad(f"drawing caption still in {path.relative_to(ROOT)}")
+    if "Website" in text:
+        bad(f"English honeypot label in {path.relative_to(ROOT)}")
+
+order = (SITE / "order" / "index.html").read_text(encoding="utf-8")
+if 'type="date"' in order:
+    bad("order date still uses the browser date input")
+if 'name="website"' not in order:
+    bad("honeypot field name missing")
+if 'id="f-day"' not in order or "ינואר" not in order:
+    bad("Hebrew date parts missing")
+if 'class="badge"' not in home or 'class="sep"' not in (SITE / "catalog" / "index.html").read_text(encoding="utf-8"):
+    bad("cart badge or breadcrumb separator missing")
+if "<br>" not in re.search(r"<h1[^>]*>.*?</h1>", home, re.S).group(0):
+    bad("home h1 has no designed line break")
+
 if fail:
     print("\n".join(fail))
     sys.exit(1)

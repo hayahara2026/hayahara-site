@@ -203,14 +203,36 @@
   });
  }
 
+ function syncDate(){
+  var day=document.getElementById('f-day');
+  var month=document.getElementById('f-month');
+  var year=document.getElementById('f-year');
+  var hidden=document.getElementById('f-event_date');
+  if(!hidden)return;
+  var iso='';
+  if(day&&month&&year&&day.value&&month.value&&year.value){
+   iso=year.value+'-'+month.value+'-'+day.value;
+   var dt=new Date(iso+'T00:00:00');
+   var real=dt.getFullYear()===+year.value&&(dt.getMonth()+1)===+month.value&&dt.getDate()===+day.value;
+   if(!real)iso='';
+  }
+  hidden.value=iso;
+  if(hidden.setCustomValidity)hidden.setCustomValidity(iso?'':'תאריך האירוע');
+ }
+
  function bindOrder(){
   var form=document.getElementById('orderform');
   if(!form)return;
   drawCart();
+  ['f-day','f-month','f-year'].forEach(function(id){
+   var el=document.getElementById(id);
+   if(el)el.addEventListener('change',syncDate);
+  });
   form.addEventListener('submit',function(e){
    e.preventDefault();
    var err=document.getElementById('err');
    err.hidden=true;
+   syncDate();
    if(!get().length){err.textContent='הסל מחכה לפריט הראשון.';err.hidden=false;return}
    if(!form.checkValidity()){err.textContent='נא למלא איש קשר, טלפון תקין, תאריך אירוע וכתובת למשלוח.';err.hidden=false;return}
    var d={};
