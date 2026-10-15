@@ -442,7 +442,7 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
 <html lang="he" dir="rtl" data-avail="{avail}">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 {robots}
@@ -467,7 +467,7 @@ def shell(url, title, desc, crumbs, body, extra=None, noindex=False, main_class=
 <a class="brand" href="/mapot/"><b>{esc(B)}</b><small>מבית מכבסת היערה</small></a>
 <nav class="site-nav" id="sitenav" aria-label="ראשי">{''.join(nav)}</nav>
 <div class="tools">
-<a class="cartlink" href="/mapot/order/"><span class="cartlabel">סל ההזמנה</span><span id="cartn" class="badge" aria-live="polite">0</span></a>
+<a class="cartlink" href="/mapot/order/" aria-label="סל ההזמנה"><span class="cartlabel">הזמנה</span><span id="cartn" class="badge" aria-live="polite">0</span></a>
 <button type="button" class="nav-toggle" id="navtoggle" aria-expanded="false" aria-controls="sitenav">תפריט</button>
 </div>
 </header>
@@ -629,7 +629,9 @@ def filter_bar(prods, lock=""):
             if not any(key in [c["key"] for c in p["public_colors"]] for p in prods):
                 continue
             parts.append(
-                f'<button type="button" class="swatch" data-filter="color" data-value="{esc(key)}" aria-pressed="false" aria-label="{esc(col["name"])}" style="--sw:{esc(col["hex"])}"></button>'
+                f'<button type="button" class="swatch" data-filter="color" data-value="{esc(key)}" aria-pressed="false" '
+                f'title="{esc(col["name"])}" aria-label="{esc(col["name"])}" style="--sw:{esc(col["hex"])}">'
+                f'<span class="swatch-chip" aria-hidden="true"></span><span class="swatch-name">{esc(col["name"])}</span></button>'
             )
         parts.append("</div></fieldset>")
     parts.append("</div>")
@@ -995,8 +997,9 @@ def product_page(p):
             on = accent and c["key"] == accent["key"]
             buttons.append(
                 f'<button type="button" class="swatch" role="radio" aria-checked="{"true" if on else "false"}" '
-                f'aria-label="{esc(c["name"])}" data-color="{esc(c["key"])}" data-name="{esc(c["name"])}" '
-                f'data-hex="{esc(c["hex"])}" style="--sw:{esc(c["hex"])}"></button>'
+                f'title="{esc(c["name"])}" aria-label="{esc(c["name"])}" data-color="{esc(c["key"])}" data-name="{esc(c["name"])}" '
+                f'data-hex="{esc(c["hex"])}" style="--sw:{esc(c["hex"])}">'
+                f'<span class="swatch-chip" aria-hidden="true"></span><span class="swatch-name">{esc(c["name"])}</span></button>'
             )
         first = accent["name"] if accent else p["public_colors"][0]["name"]
         sw = (
@@ -1007,6 +1010,8 @@ def product_page(p):
     min_attr = int(min_qty) if isinstance(min_qty, int) and min_qty > 0 else 1
     min_note = f'<p class="qty-note">כמות מינימלית: {min_attr}</p>' if isinstance(min_qty, int) and min_qty else ""
     needs = "1" if p["public_colors"] else "0"
+    size_attr = esc(p.get("size") or "")
+    fabric_attr = esc(mat_name(p))
     pts = "".join(f"<li>{esc(x)}</li>" for x in t["pts"])
     pairs = product_faq(p)
     faq_html = "".join(f"<h2>{esc(q)}</h2><p>{esc(a)}</p>" for q, a in pairs)
@@ -1026,7 +1031,7 @@ def product_page(p):
 <label class="qty-note" for="q">{esc(t['qty'])}</label>
 <div class="stepper"><button type="button" id="qdec" aria-label="הפחתת כמות">−</button><input id="q" type="number" min="{min_attr}" max="10000" value="{min_attr}" inputmode="numeric" aria-label="כמות"><button type="button" id="qinc" aria-label="הגדלת כמות">+</button></div>
 {min_note}
-<div class="actions"><button type="button" class="btn" id="add" data-sku="{esc(p['sku'])}" data-name="{esc(p['name_he'])}" data-needs-color="{needs}" data-min="{min_attr}">{esc(t['btn'])}</button></div>
+<div class="actions"><button type="button" class="btn" id="add" data-sku="{esc(p['sku'])}" data-name="{esc(p['name_he'])}" data-size="{size_attr}" data-fabric="{fabric_attr}" data-needs-color="{needs}" data-min="{min_attr}">{esc(t['btn'])}</button></div>
 <p id="added" hidden role="status">נוסף לסל. <a href="/mapot/order/">לסל ההזמנה</a></p>
 <ul class="points">{pts}</ul>
 <p>אפשר גם בטלפון או בוואטסאפ: <a href="{WA}">{PH}</a></p>
@@ -1036,7 +1041,7 @@ def product_page(p):
 {related(p)}
 <noscript><p>להזמנה בטלפון או בוואטסאפ: <a href="{WA}">{PH}</a></p></noscript>
 """
-    dock = f'''<div class="dock"><div><b>{esc(p["name_he"])}</b><span>{esc(price_label(p))}</span></div><button type="button" class="btn" id="adddock">{esc(t["btn"])}</button></div>'''
+    dock = f'''<div class="dock" aria-hidden="true"><div><b>{esc(p["name_he"])}</b><span>{esc(price_label(p))}</span></div></div>'''
     cat_slug, cat_name = CAT_BY_TYPE[p["type"]]
     shell(
         url,
@@ -1053,21 +1058,12 @@ MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "י
 
 
 def date_field(label):
-    days = '<option value="">יום</option>' + "".join(
-        f'<option value="{d:02d}">{d}</option>' for d in range(1, 32)
-    )
-    months = '<option value="">חודש</option>' + "".join(
-        f'<option value="{i:02d}">{esc(name)}</option>' for i, name in enumerate(MONTHS_HE, 1)
-    )
-    years = '<option value="">שנה</option>' + "".join(
-        f'<option value="{y}">{y}</option>' for y in range(2026, 2033)
-    )
+    months = ",".join(MONTHS_HE)
     return (
-        f'<fieldset class="datefield"><legend>{esc(label)} *</legend><div class="dateparts">'
-        f'<label class="sr" for="f-day">יום</label><select id="f-day" required>{days}</select>'
-        f'<label class="sr" for="f-month">חודש</label><select id="f-month" required>{months}</select>'
-        f'<label class="sr" for="f-year">שנה</label><select id="f-year" required>{years}</select>'
-        f'</div><input id="f-event_date" name="event_date" type="hidden" value="" required></fieldset>'
+        f'<fieldset class="datefield" data-months="{esc(months)}"><legend>{esc(label)} *</legend>'
+        f'<div class="datepick"><span class="dateface" id="dateface">בחירת תאריך</span>'
+        f'<input id="f-event_date" name="event_date" type="date" required '
+        f'min="2026-01-01" max="2032-12-31" aria-label="{esc(label)}"></div></fieldset>'
     )
 
 

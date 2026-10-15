@@ -163,12 +163,14 @@ for path, text in public_text:
         bad(f"English honeypot label in {path.relative_to(ROOT)}")
 
 order = (SITE / "order" / "index.html").read_text(encoding="utf-8")
-if 'type="date"' in order:
-    bad("order date still uses the browser date input")
+if 'type="date"' not in order or 'id="f-event_date"' not in order:
+    bad("order date is not a single date field")
+if 'id="f-day"' in order or 'id="f-month"' in order or 'id="f-year"' in order:
+    bad("order date is still three selects")
+if "ינואר" not in order or "דצמבר" not in order:
+    bad("Hebrew month names missing from the order page")
 if 'name="website"' not in order:
     bad("honeypot field name missing")
-if 'id="f-day"' not in order or "ינואר" not in order:
-    bad("Hebrew date parts missing")
 if 'class="badge"' not in home or 'class="sep"' not in (SITE / "catalog" / "index.html").read_text(encoding="utf-8"):
     bad("cart badge or breadcrumb separator missing")
 if "<br>" not in re.search(r"<h1[^>]*>.*?</h1>", home, re.S).group(0):
@@ -181,6 +183,18 @@ if linen.count('data-view=') < 4:
     bad("product gallery is missing views")
 if 'id="zoom"' not in linen:
     bad("product gallery has no zoom control")
+if 'class="swatch-name"' not in linen or "בורדו" not in linen:
+    bad("color swatch is missing a visible name")
+if 'id="adddock"' in linen or linen.count('id="add"') != 1:
+    bad("product page does not have a single add button")
+if "btn#add{display:none}" in (SITE / "assets" / "mapot.css").read_text(encoding="utf-8").replace(" ", ""):
+    bad("add button is hidden from the accessibility tree")
+round_html = (SITE / "catalog" / "tc-satin-round" / "index.html").read_text(encoding="utf-8")
+if 'rx="246"' not in round_html or 'r="300"' in round_html:
+    bad("round cloth is still a circle in a square")
+floral_html = (SITE / "catalog" / "tc-floral" / "index.html").read_text(encoding="utf-8")
+if "<pattern" not in floral_html:
+    bad("floral cloth is missing a print pattern")
 
 photos_present = bool(media_slot.list_files(str(ROOT / "mapot-src" / "photos")))
 range_present = bool(media_slot.range_files(str(ROOT / "mapot-src" / "range")))

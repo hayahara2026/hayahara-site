@@ -56,7 +56,7 @@ node tests/api_test.mjs
 
 `config.json`:
 
-- `show_placeholder_colors: true` בזמן התצוגה המקדימה. הדפדפן מראה דוגמיות וסינון לפי צבע. השמות לא נכנסים ל־JSON-LD, ל־title או ל־llms.txt.
+- `show_placeholder_colors: true` בזמן התצוגה המקדימה. כל דוגמית מציגה את שם הצבע, בתווית וברמז. השמות לא נכנסים ל־JSON-LD, ל־title או ל־llms.txt.
 - לקראת עלייה לאוויר: `false`, אלא אם צבי אישר את רשימת הצבעים. צבע עם `placeholder: false` נשאר גם כשהדגל כבוי.
 - מחליפים צבע: עורכים את `colors` (מפתח, שם, hex) ואת המערך `colors` בכל מוצר. כיסוי הכיסא נשאר ריק.
 
@@ -99,7 +99,7 @@ Sitemap: https://hayahara.co.il/mapot/sitemap.xml
 
 ## הזמנה
 
-הסל נשמר בדפדפן. שליחה ל־`POST /mapot/api/order` עם `sku`, `color` (ריק בכיסוי כיסא) ו־`qty`. המייל, גיבוי D1, מגבלת 5 בקשות לשעה ו־honeypot נשארו כמו שהיו. הערות שמתחילות ב־`TEST` מקבלות נושא `[TEST]`. אחרי פריסת התצוגה:
+הסל נשמר בדפדפן. בכל שורה מופיעים כמות, מידה, בד וצבע, כשיש אותם בפריט, וכפתור הסרה. תאריך האירוע הוא שדה אחד: התצוגה בעברית (למשל 1 בדצמבר 2026), והערך שנשלח נשאר `YYYY-MM-DD`. שליחה ל־`POST /mapot/api/order` עם `sku`, `color` (ריק בכיסוי כיסא) ו־`qty`. המייל, גיבוי D1, מגבלת 5 בקשות לשעה ו־honeypot נשארו כמו שהיו. הערות שמתחילות ב־`TEST` מקבלות נושא `[TEST]`. אחרי פריסת התצוגה:
 
 ```bash
 python3 tests/order_test.py https://mapot-preview.hayahara-site.pages.dev

@@ -63,22 +63,28 @@ def _sheen(uid, d):
     )
 
 
-def _flowers(uid):
-    # A few large blooms, not a tiled stamp.
-    spots = [(210, 340, 1), (430, 260, 0.85), (520, 480, 1.1), (300, 560, 0.7), (150, 500, 0.6)]
-    parts = []
-    for i, (x, y, s) in enumerate(spots):
-        parts.append(
-            f'<g transform="translate({x} {y}) scale({s})" fill="none" stroke="{INK}" stroke-width="1.4" opacity="0.55">'
-            f'<path d="M0-18c6 8 6 14 0 22c-6-8-6-14 0-22z"/>'
-            f'<path d="M0 18c6-8 6-14 0-22c-6 8-6 14 0 22z"/>'
-            f'<path d="M-18 0c8-6 14-6 22 0c-8 6-14 6-22 0z"/>'
-            f'<path d="M18 0c-8-6-14-6-22 0c8 6 14 6 22 0z"/>'
-            f'<path d="M-12-12c10 2 14 8 12 16" opacity="0.7"/>'
-            f'<circle r="2.2" fill="{INK}" stroke="none"/>'
-            f"</g>"
+def _blossom():
+    # Five petals around the origin, so a tile reads as a printed flower.
+    petals = []
+    for turn in (0, 72, 144, 216, 288):
+        petals.append(
+            f'<ellipse cx="0" cy="-8" rx="3.5" ry="6.4" transform="rotate({turn})"/>'
         )
-    return "".join(parts)
+    petals.append('<circle r="2.2"/>')
+    return "".join(petals)
+
+
+def _floral_pattern(uid):
+    bloom = _blossom()
+    return (
+        f'<pattern id="fp{uid}" width="68" height="68" patternUnits="userSpaceOnUse">'
+        f'<g fill="#fff" opacity="0.9" transform="translate(20 24) scale(1.22)">{bloom}</g>'
+        f'<g fill="{INK}" opacity="0.62" transform="translate(20 24)">{bloom}</g>'
+        f'<g fill="#fff" opacity="0.85" transform="translate(50 52) scale(0.78)">{bloom}</g>'
+        f'<g fill="{INK}" opacity="0.5" transform="translate(50 52) scale(0.62)">{bloom}</g>'
+        f'<path d="M46 16c7 1 11 7 7 12c-6-1-10-7-7-12z" fill="{INK}" opacity="0.45"/>'
+        f"</pattern>"
+    )
 
 
 def square(uid, fabric, w=800, h=1000):
@@ -88,7 +94,9 @@ def square(uid, fabric, w=800, h=1000):
         "C 790 420, 740 560, 780 760 C 640 820, 470 740, 300 810 "
         "C 160 870, 40 760, 20 620 C 0 430, 40 340, 70 250 Z"
     )
-    bloom = _flowers(uid) if fabric == "floral" else ""
+    printed = ""
+    if fabric == "floral":
+        printed = _floral_pattern(uid) + f'<path d="{cloth}" fill="url(#fp{uid})"/>'
     body = (
         f"{_defs(uid)}"
         f'<clipPath id="cp{uid}"><path d="{cloth}"/></clipPath>'
@@ -100,7 +108,7 @@ def square(uid, fabric, w=800, h=1000):
         f'<path d="M480 180 C 560 360, 520 600, 610 780" fill="none" stroke="#140e0a" stroke-width="18" stroke-linecap="round" opacity="0.12"/>'
         f'<path d="{cloth}" fill="url(#lg{uid})"/>'
         f'<path d="{cloth}" fill="url(#dk{uid})"/>'
-        f"{bloom}"
+        f"{printed}"
         f'<path d="M760 250 C 790 420, 740 560, 780 760 C 640 820, 470 740, 300 810 C 160 870, 40 760, 20 620" fill="none" stroke="#140e0a" stroke-width="10" opacity="0.15"/>'
         f"{_sheen(uid, cloth)}"
     )
@@ -134,44 +142,56 @@ def banquet(uid, fabric):
 
 def round_cloth(uid, fabric):
     uid = uid_of(uid)
+    # Round table seen slightly from above: elliptical top, cloth falling past the rim to a hem.
+    skirt = (
+        "M168 448 "
+        "C148 540, 104 680, 124 808 "
+        "C220 900, 580 900, 676 808 "
+        "C696 680, 652 540, 632 448 "
+        "C548 512, 252 512, 168 448 Z"
+    )
     body = (
         f"{_defs(uid)}"
-        f'<clipPath id="cp{uid}"><circle cx="400" cy="470" r="300"/></clipPath>'
-        f'<rect width="800" height="1000" fill="#e3d7c6"/>'
-        f'<ellipse cx="400" cy="800" rx="250" ry="36" fill="{INK}" opacity="0.18" filter="url(#sh{uid})"/>'
-        f'<circle cx="400" cy="500" r="330" fill="#140e0a" opacity="0.18"/>'
-        f'<circle cx="400" cy="470" r="300" {_fill()} filter="url(#tx{uid})"/>'
-        f'<path d="M400 180 C 460 300, 430 520, 400 760" fill="none" stroke="#140e0a" stroke-width="22" opacity="0.1"/>'
-        f'<path d="M180 400 C 300 450, 520 430, 680 500" fill="none" stroke="#fff" stroke-width="18" opacity="0.14"/>'
-        f'<path d="M230 260 C 300 360, 280 520, 210 640" fill="none" stroke="#140e0a" stroke-width="16" opacity="0.1"/>'
-        f'<path d="M560 240 C 520 400, 600 560, 640 700" fill="none" stroke="#fff" stroke-width="14" opacity="0.12"/>'
-        f'<circle cx="400" cy="470" r="300" fill="url(#lg{uid})"/>'
-        f'<circle cx="400" cy="470" r="300" fill="none" stroke="#140e0a" stroke-width="8" opacity="0.12"/>'
-        f"{_sheen(uid, '')}"
+        f'<clipPath id="cp{uid}"><path d="{skirt}"/><ellipse cx="400" cy="408" rx="246" ry="84"/></clipPath>'
+        f'<rect width="800" height="1000" fill="#ddd2c2"/>'
+        f'<ellipse cx="400" cy="868" rx="290" ry="40" fill="{INK}" opacity="0.16" filter="url(#sh{uid})"/>'
+        f'<path d="{skirt}" {_fill()} filter="url(#tx{uid})"/>'
+        f'<path d="M214 490 C188 620, 176 730, 206 850" fill="none" stroke="#140e0a" stroke-width="30" opacity="0.13" stroke-linecap="round"/>'
+        f'<path d="M300 520 C322 650, 286 770, 318 888" fill="none" stroke="#fff" stroke-width="22" opacity="0.18" stroke-linecap="round"/>'
+        f'<path d="M400 510 C378 660, 424 780, 396 900" fill="none" stroke="#140e0a" stroke-width="18" opacity="0.1" stroke-linecap="round"/>'
+        f'<path d="M508 515 C534 650, 492 770, 536 875" fill="none" stroke="#fff" stroke-width="20" opacity="0.15" stroke-linecap="round"/>'
+        f'<path d="M598 480 C624 610, 600 740, 622 840" fill="none" stroke="#140e0a" stroke-width="26" opacity="0.12" stroke-linecap="round"/>'
+        f'<path d="{skirt}" fill="url(#dk{uid})"/>'
+        f'<path d="M124 808 C220 900, 580 900, 676 808" fill="none" stroke="#140e0a" stroke-width="8" opacity="0.2"/>'
+        f'<ellipse cx="400" cy="408" rx="246" ry="84" {_fill()} filter="url(#tx{uid})"/>'
+        f'<ellipse cx="400" cy="408" rx="246" ry="84" fill="url(#lg{uid})" opacity="0.85"/>'
+        f'<ellipse cx="400" cy="418" rx="246" ry="84" fill="none" stroke="#140e0a" stroke-width="14" opacity="0.16"/>'
+        f'<ellipse cx="400" cy="396" rx="214" ry="64" fill="none" stroke="#fff" stroke-width="3" opacity="0.45"/>'
+        f"{_sheen(uid, skirt)}"
     )
     return _svg(body, 800, 1000, fabric)
 
 
 def floral_cloth(uid, fabric):
     uid = uid_of(uid)
-    cloth = (
-        "M60 220 C 200 150, 420 200, 760 180 L 790 820 C 600 880, 300 800, 40 860 "
-        "C 20 560, 30 360, 60 220 Z"
-    )
-    # Turned-back corner, underside lighter.
-    flap = "M560 180 L 790 180 L 790 420 C 700 300, 620 240, 560 180 Z"
+    # Rectangular cloth on a table: top, front drop, side drop, covered by a repeating print.
+    cloth = "M150 250 L 660 210 L 710 430 L 748 870 L 128 930 L 92 640 Z"
     body = (
         f"{_defs(uid)}"
+        f"{_floral_pattern(uid)}"
         f'<clipPath id="cp{uid}"><path d="{cloth}"/></clipPath>'
-        f'<rect width="800" height="1000" fill="#e6dcc8"/>'
-        f'<ellipse cx="420" cy="860" rx="280" ry="40" fill="{INK}" opacity="0.15" filter="url(#sh{uid})"/>'
+        f'<rect width="800" height="1000" fill="#e4d9c6"/>'
+        f'<ellipse cx="430" cy="900" rx="300" ry="36" fill="{INK}" opacity="0.15" filter="url(#sh{uid})"/>'
         f'<path d="{cloth}" {_fill()} filter="url(#tx{uid})"/>'
-        f'<path d="M140 260 C 180 460, 120 680, 90 840" fill="none" stroke="#140e0a" stroke-width="24" opacity="0.1" stroke-linecap="round"/>'
-        f'<path d="M360 200 C 400 420, 340 680, 390 860" fill="none" stroke="#fff" stroke-width="18" opacity="0.13" stroke-linecap="round"/>'
-        f"{_flowers(uid)}"
-        f'<path d="{flap}" fill="#f4efe6" filter="url(#tx{uid})"/>'
-        f'<path d="M560 180 C 640 250, 720 320, 790 420" fill="none" stroke="#140e0a" stroke-width="6" opacity="0.2"/>'
-        f'<path d="{cloth}" fill="url(#lg{uid})"/>'
+        f'<path d="{cloth}" fill="url(#fp{uid})"/>'
+        f'<g clip-path="url(#cp{uid})">'
+        f'<path d="M210 500 C190 640, 170 760, 200 880" fill="none" stroke="#140e0a" stroke-width="26" opacity="0.1" stroke-linecap="round"/>'
+        f'<path d="M360 470 C380 640, 340 760, 390 900" fill="none" stroke="#fff" stroke-width="18" opacity="0.16" stroke-linecap="round"/>'
+        f'<path d="M540 450 C520 620, 560 760, 530 860" fill="none" stroke="#140e0a" stroke-width="20" opacity="0.1" stroke-linecap="round"/>'
+        f'<path d="M175 488 L 710 430" fill="none" stroke="#140e0a" stroke-width="8" opacity="0.22"/>'
+        f'<path d="M128 930 L 748 870" fill="none" stroke="#140e0a" stroke-width="7" opacity="0.18"/>'
+        f"</g>"
+        f'<path d="{cloth}" fill="url(#dk{uid})" opacity="0.35"/>'
         f"{_sheen(uid, cloth)}"
     )
     return _svg(body, 800, 1000, fabric or "floral")

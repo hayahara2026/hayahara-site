@@ -100,6 +100,26 @@
   paint();
  }
 
+ function pinScroll(el){
+  var pin=null;
+  function restore(){
+   if(pin==null)return;
+   if(Math.abs(window.scrollY-pin)>1)window.scrollTo(window.scrollX,pin);
+  }
+  el.addEventListener('pointerdown',function(e){
+   if(e.pointerType==='mouse'&&e.button!==0)return;
+   pin=window.scrollY;
+  });
+  el.addEventListener('focus',function(){
+   if(pin==null)return;
+   restore();
+   requestAnimationFrame(function(){
+    restore();
+    requestAnimationFrame(function(){restore();pin=null});
+   });
+  });
+ }
+
  function bindProduct(){
   var add=document.getElementById('add');
   if(!add)return;
@@ -107,9 +127,10 @@
   var min=parseInt(add.dataset.min||'1',10)||1;
   var max=10000;
   function curMax(){var m=parseInt(q&&q.max,10);return m>=1?m:max}
-  document.querySelectorAll('.swatch').forEach(function(b){
+  document.querySelectorAll('.buy .swatch').forEach(function(b){
+   pinScroll(b);
    b.addEventListener('click',function(){
-    document.querySelectorAll('.swatch').forEach(function(x){x.setAttribute('aria-checked','false')});
+    document.querySelectorAll('.buy .swatch').forEach(function(x){x.setAttribute('aria-checked','false')});
     b.setAttribute('aria-checked','true');
     var stage=document.getElementById('stage');
     if(stage)stage.style.setProperty('--cloth',b.dataset.hex);
@@ -132,15 +153,16 @@
    var colorHex=sw?sw.dataset.hex:'';
    var c=get();
    var f=c.find(function(i){return i.sku===add.dataset.sku&&(i.color||'')===color});
-   if(f)f.qty=Math.min(curMax(),f.qty+qty);
-   else c.push({sku:add.dataset.sku,name:add.dataset.name,color:color,colorName:colorName,colorHex:colorHex,qty:qty});
+   if(f){
+    f.qty=Math.min(curMax(),f.qty+qty);
+    if(add.dataset.size)f.size=add.dataset.size;
+    if(add.dataset.fabric)f.fabric=add.dataset.fabric;
+   }else c.push({sku:add.dataset.sku,name:add.dataset.name,size:add.dataset.size||'',fabric:add.dataset.fabric||'',color:color,colorName:colorName,colorHex:colorHex,qty:qty});
    set(c);
    var note=document.getElementById('added');
    if(note){note.hidden=false}
   }
   add.addEventListener('click',addOne);
-  var dock=document.getElementById('adddock');
-  if(dock)dock.addEventListener('click',addOne);
   refreshAvail();
  }
 
@@ -178,13 +200,16 @@
   if(box)box.hidden=c.length===0;
   if(!t)return;
   t.innerHTML=c.map(function(i,k){
-   var dot=i.colorHex?'<span class="linedot" style="--sw:'+esc(i.colorHex)+'" aria-hidden="true"></span>':'';
-   var col=i.colorName?'<span class="linecolor">'+esc(i.colorName)+'</span>':'';
-   return '<tr><td>'+dot+'<span class="linename">'+esc(i.name)+'</span>'+col+'</td>'
+   var bits=['כמות '+i.qty];
+   if(i.size)bits.push('מידה '+i.size);
+   if(i.fabric)bits.push('בד '+i.fabric);
+   if(i.colorName)bits.push(i.colorName);
+   return '<tr><td><span class="linename">'+esc(i.name)+'</span>'
+    +'<span class="linemeta">'+esc(bits.join(' · '))+'</span></td>'
     +'<td><div class="stepper"><button type="button" data-dec="'+k+'" aria-label="הפחתת כמות">−</button>'
     +'<input type="number" min="1" max="10000" value="'+i.qty+'" data-k="'+k+'" aria-label="כמות">'
     +'<button type="button" data-inc="'+k+'" aria-label="הגדלת כמות">+</button></div></td>'
-    +'<td><button type="button" data-r="'+k+'">הסרה</button></td></tr>';
+    +'<td><button type="button" class="line-remove" data-r="'+k+'" aria-label="הסרת '+esc(i.name)+'">הסרה</button></td></tr>';
   }).join('');
   t.querySelectorAll('input').forEach(function(x){
    x.addEventListener('change',function(){
@@ -203,36 +228,57 @@
   });
  }
 
- function syncDate(){
-  var day=document.getElementById('f-day');
-  var month=document.getElementById('f-month');
-  var year=document.getElementById('f-year');
-  var hidden=document.getElementById('f-event_date');
-  if(!hidden)return;
-  var iso='';
-  if(day&&month&&year&&day.value&&month.value&&year.value){
-   iso=year.value+'-'+month.value+'-'+day.value;
-   var dt=new Date(iso+'T00:00:00');
-   var real=dt.getFullYear()===+year.value&&(dt.getMonth()+1)===+month.value&&dt.getDate()===+day.value;
-   if(!real)iso='';
+ function monthNames(){
+  var field=document.querySelector('.datefield');
+  var raw=field&&field.getAttribute('data-months');
+  if(raw){
+   var parts=raw.split(',');
+   if(parts.length===12)return parts;
   }
-  hidden.value=iso;
-  if(hidden.setCustomValidity)hidden.setCustomValidity(iso?'':'תאריך האירוע');
+  return ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+ }
+
+ function heDate(iso){
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');
+  if(!m)return '';
+  var y=+m[1],mo=+m[2],d=+m[3];
+  if(mo<1||mo>12||y<2026||y>2032)return '';
+  var dt=new Date(iso+'T00:00:00');
+  if(dt.getFullYear()!==y||dt.getMonth()+1!==mo||dt.getDate()!==d)return '';
+  return d+' ב'+monthNames()[mo-1]+' '+y;
+ }
+
+ function paintDate(){
+  var input=document.getElementById('f-event_date');
+  var face=document.getElementById('dateface');
+  if(!input)return;
+  var label=heDate(input.value);
+  if(input.value&&!label){
+   input.setCustomValidity('תאריך האירוע');
+   if(face)face.textContent='בחירת תאריך';
+  }else{
+   input.setCustomValidity('');
+   if(face)face.textContent=label||'בחירת תאריך';
+  }
  }
 
  function bindOrder(){
   var form=document.getElementById('orderform');
   if(!form)return;
   drawCart();
-  ['f-day','f-month','f-year'].forEach(function(id){
-   var el=document.getElementById(id);
-   if(el)el.addEventListener('change',syncDate);
-  });
+  var wrap=document.querySelector('.datepick');
+  if(wrap)wrap.classList.add('is-ready');
+  var date=document.getElementById('f-event_date');
+  if(date){
+   date.addEventListener('input',paintDate);
+   date.addEventListener('change',paintDate);
+   paintDate();
+  }
   form.addEventListener('submit',function(e){
    e.preventDefault();
    var err=document.getElementById('err');
    err.hidden=true;
-   syncDate();
+   paintDate();
    if(!get().length){err.textContent='הסל מחכה לפריט הראשון.';err.hidden=false;return}
    if(!form.checkValidity()){err.textContent='נא למלא איש קשר, טלפון תקין, תאריך אירוע וכתובת למשלוח.';err.hidden=false;return}
    var d={};
@@ -292,6 +338,7 @@
    zoom.setAttribute('aria-pressed',on?'true':'false');
   });
   g.querySelectorAll('[data-go]').forEach(function(b){
+   pinScroll(b);
    b.addEventListener('click',function(){
     var id=b.getAttribute('data-go');
     showView(g,id);
